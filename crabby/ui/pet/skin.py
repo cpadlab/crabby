@@ -61,13 +61,12 @@ class PetSkin:
             state: The state being reported.
         """
         if state == PetState.MOVING_RIGHT:
-            msg = "[PetSkin] Estado: Moviendo a la derecha ➡️"
+            msg = "Pet Skin Status: Moving to the right"
         elif state == PetState.MOVING_LEFT:
-            msg = "[PetSkin] Estado: Moviendo a la izquierda ⬅️"
+            msg = "Pet Skin Status: Moving to the left"
         elif state == PetState.IDLE:
-            msg = "[PetSkin] Estado: IDLE 😴"
+            msg = "Pet Skin Status: IDLE"
         else:
-            msg = f"[PetSkin] Estado: {state.value}"
+            msg = f"Pet Skin Status: {state.value}"
 
         logger.info(msg)
-        print(msg)

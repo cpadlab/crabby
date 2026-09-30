@@ -1,6 +1,5 @@
-from crabby.core.config import settings
 from crabby.core.lifespan.startup import on_startup
-from crabby.shared.logger import logger
+from crabby.ui.pet.main import launch_pet
 
 
 def main() -> None:
@@ -11,6 +10,7 @@ def main() -> None:
     and bootstraps the application context.
     """
     on_startup()
+    launch_pet()
 
 
 if __name__ == "__main__":
