@@ -1,3 +1,5 @@
+import os
+import sys
 from pathlib import Path
 import urllib.error
 import urllib.request
@@ -72,6 +74,14 @@ def init_workspace() -> Path:
     return settings.ENV_FILE
 
 
+def log_process_info() -> None:
+    """
+    Logs the current operating system process information.
+    """
+    pid = os.getpid()
+    logger.info(f"Running Crabby process: PID-{pid}")
+
+
 def on_startup() -> None:
     """
     Executes the startup sequence for the application lifespan.
@@ -79,7 +89,11 @@ def on_startup() -> None:
     Initializes the workspace environment, confirms logging readiness, and
     emits the startup completion signal.
     """
-    settings.validate_platform()
+    current_os = settings.validate_platform()
+
     init_workspace()
+    log_process_info()
+
+    logger.info(f"Platform detected and validated: {str(current_os).capitalize()}")
 
     logger.info("Crabby's startup cycle was successfully completed.")
