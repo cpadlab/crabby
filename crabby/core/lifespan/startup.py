@@ -3,15 +3,27 @@ import urllib.error
 import urllib.request
 
 from crabby.core.config import settings
+from crabby.core.exceptions import ConfigurationTemplateNotFoundError
 from crabby.shared.logger import logger, setup_logger
 
 
 def fetch_remote_config() -> str:
     """
+    Fetches the default configuration template from the remote repository.
+
+    Performs an HTTP GET request against the remote URL configured in settings
+    with a 5-second timeout.
+
+    Returns:
+        str: Decoded UTF-8 text containing the raw configuration template.
+
+    Raises:
+        ConfigurationTemplateNotFoundError: If the network request fails, times out,
+            or returns a non-200 HTTP status code.
     """
     try:
-        req = urllib.request.Request(settings.REMOTE_CONFIG_URL, headers={"User-Agent": "Crabby-Desktop-App"})
-        
+        req = urllib.request.Request(settings.REMOTE_CONFIG_URL, headers={"User-Agent": "Crabby-Desktop-App"},)
+
         with urllib.request.urlopen(req, timeout=5) as response:
             if response.status == 200:
                 logger.info(f"Template successfully downloaded from: {settings.REMOTE_CONFIG_URL}")
@@ -26,6 +38,17 @@ def fetch_remote_config() -> str:
 
 def init_workspace() -> Path:
     """
+    Prepares the local Crabby workspace directory and configuration files.
+
+    Creates required directories, sets up logging, synchronizes the `.example`
+    reference template, and generates a `.env` file if one does not already exist.
+
+    Returns:
+        Path: Path to the active `.env` configuration file.
+
+    Raises:
+        ConfigurationTemplateNotFoundError: If local template resolution fails and
+            the remote template cannot be retrieved.
     """
     settings.CRABBY_DIR.mkdir(parents=True, exist_ok=True)
     settings.LOGS_DIR.mkdir(parents=True, exist_ok=True)
@@ -49,8 +72,12 @@ def init_workspace() -> Path:
     return settings.ENV_FILE
 
 
-def on_startup():
+def on_startup() -> None:
     """
+    Executes the startup sequence for the application lifespan.
+
+    Initializes the workspace environment, confirms logging readiness, and
+    emits the startup completion signal.
     """
     init_workspace()
     logger.info("Ciclo de arranque de Crabby completado con éxito.")
