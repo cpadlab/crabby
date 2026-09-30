@@ -1,0 +1,16 @@
+[project]
+name = "crabby"
+version = "0.1.0"
+description = "Your AI-powered personal assistant designed to automate tasks and simplify your daily life."
+authors = [
+    {name = "Carlos Padilla Labella",email = "cpadlab@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
