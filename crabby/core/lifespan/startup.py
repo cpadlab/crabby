@@ -79,5 +79,7 @@ def on_startup() -> None:
     Initializes the workspace environment, confirms logging readiness, and
     emits the startup completion signal.
     """
+    settings.validate_platform()
     init_workspace()
-    logger.info("Ciclo de arranque de Crabby completado con éxito.")
+
+    logger.info("Crabby's startup cycle was successfully completed.")

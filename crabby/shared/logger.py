@@ -24,7 +24,7 @@ def setup_logger() -> None:
 
     logger.setLevel(logging.INFO)
 
-    formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] [%(name)s]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S",)
+    formatter = logging.Formatter("[%(asctime)s] [%(levelname)s]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S",)
 
     if not logger.handlers:
         console_handler = logging.StreamHandler()
