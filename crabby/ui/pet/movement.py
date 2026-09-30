@@ -7,7 +7,7 @@ from PyQt6.QtCore import (
     Qt,
     pyqtSignal,
 )
-from PyQt6.QtGui import QGuiApplication, QMouseEvent
+from PyQt6.QtGui import QGuiApplication, QMouseEvent, QScreen
 from PyQt6.QtWidgets import QWidget
 
 
@@ -16,15 +16,16 @@ class DragController(QObject):
     Manages drag physics, screen padding, and smooth magnetic edge snapping.
 
     Attributes:
-        position_settled: Signal emitted with (x, y) coordinates when the target
-            widget completes its magnetic snap animation or settles into place.
+        position_settled: Signal emitted with `(rel_x, rel_y, screen_name)` when
+            the target widget settles into its final position, where coordinates
+            are normalized ratios between 0.0 and 1.0.
         target: The widget being dragged and animated.
         screen_margin: Margin in pixels maintained between the widget and screen edges.
         is_dragging: Whether a mouse drag operation is actively in progress.
     """
 
 
-    position_settled = pyqtSignal(int, int)
+    position_settled = pyqtSignal(float, float, str)
 
 
     def __init__(self, target: QWidget, screen_margin: int = 12) -> None:
@@ -47,29 +48,32 @@ class DragController(QObject):
         self._snap_animation.finished.connect(self._on_animation_finished)
 
 
-    def _on_animation_finished(self) -> None:
+    def _get_current_screen(self) -> QScreen:
         """
-        Emits settlement coordinates once magnetic animation completes.
+        Retrieves the screen containing the target widget's center point.
+
+        Returns:
+            QScreen: The screen currently under the center of the widget, or
+            the primary screen as a fallback.
         """
-        self.position_settled.emit(self.target.x(), self.target.y())
+        center_point = self.target.geometry().center()
+        screen = QGuiApplication.screenAt(center_point)
+        
+        if not screen:
+            screen = QGuiApplication.primaryScreen()
+        
+        return screen
 
 
     def _get_current_screen_geometry(self) -> QRect:
         """
-        Retrieves the available geometry of the screen containing the target widget.
-
-        Resolves the screen using the target's center point. Falls back to the
-        primary screen or a default 1080p rectangle if no screen is detected.
+        Retrieves the usable geometry of the current screen.
 
         Returns:
-            QRect: The available geometry bounds excluding taskbars and docks.
+            QRect: Available geometry bounds excluding taskbars, docks, and system bars.
+            Falls back to a default 1920x1080 rectangle if no screen is available.
         """
-        center_point = self.target.geometry().center()
-        screen = QGuiApplication.screenAt(center_point)
-
-        if not screen:
-            screen = QGuiApplication.primaryScreen()
-
+        screen = self._get_current_screen()
         return screen.availableGeometry() if screen else QRect(0, 0, 1920, 1080)
 
 
@@ -81,34 +85,71 @@ class DragController(QObject):
             screen_rect: The geometry of the screen to bound within.
 
         Returns:
-            tuple[int, int, int, int]: A tuple containing (min_x, max_x, min_y, max_y)
-            permissible top-left coordinates for the target widget.
+            tuple[int, int, int, int]: A tuple containing `(min_x, max_x, min_y, max_y)`
+            permissible top-left pixel coordinates for the target widget.
         """
         min_x = screen_rect.left() + self.screen_margin
         max_x = screen_rect.right() - self.target.width() - self.screen_margin + 1
         min_y = screen_rect.top() + self.screen_margin
         max_y = screen_rect.bottom() - self.target.height() - self.screen_margin + 1
-
+        
         return min_x, max_x, min_y, max_y
+
+
+    def calculate_relative_position(self, point: QPoint) -> tuple[float, float, str]:
+        """
+        Converts an absolute pixel point into a normalized ratio for the current screen.
+
+        Maps coordinates within the clamped available screen area to values ranging
+        from 0.0 to 1.0, rounded to 4 decimal places.
+
+        Args:
+            point: Absolute pixel coordinates of the widget.
+
+        Returns:
+            tuple[float, float, str]: A tuple of `(rel_x, rel_y, screen_name)` representing
+            the normalized horizontal and vertical coordinates alongside the screen identifier.
+        """
+        screen = self._get_current_screen()
+        rect = screen.availableGeometry()
+        min_x, max_x, min_y, max_y = self._get_clamped_bounds(rect)
+
+        span_x = max(1, max_x - min_x)
+        span_y = max(1, max_y - min_y)
+
+        rel_x = round(max(0.0, min(1.0, (point.x() - min_x) / span_x)), 4)
+        rel_y = round(max(0.0, min(1.0, (point.y() - min_y) / span_y)), 4)
+
+        return rel_x, rel_y, screen.name()
+
+
+    def _on_animation_finished(self) -> None:
+        """
+        Handles completion of the snap animation and emits settlement coordinates.
+
+        Calculates the normalized relative position and screen identifier from
+        the widget's settled pixel coordinates and emits `position_settled`.
+        """
+        rel_x, rel_y, screen_name = self.calculate_relative_position(self.target.pos())
+        self.position_settled.emit(rel_x, rel_y, screen_name)
 
 
     def _calculate_nearest_magnet_point(
         self, current_x: int, current_y: int, screen_rect: QRect
     ) -> QPoint:
         """
-        Finds the closest edge point on the screen to snap the widget onto.
+        Determines the closest clamped screen edge point to snap onto.
 
-        Compares the perpendicular distances from the widget's current coordinates
-        to all four screen boundaries (accounting for margins) and chooses the
-        closest edge.
+        Calculates orthogonal distances to all four margin boundaries and selects
+        the nearest edge, maintaining the other axis within valid clamped limits.
 
         Args:
-            current_x: Current horizontal coordinate of the widget.
-            current_y: Current vertical coordinate of the widget.
-            screen_rect: The geometry of the screen to snap against.
+            current_x: Current horizontal pixel coordinate of the widget.
+            current_y: Current vertical pixel coordinate of the widget.
+            screen_rect: The usable geometry of the screen to snap against.
 
         Returns:
-            QPoint: The closest point on the nearest margin boundary.
+            QPoint: The closest destination point on the nearest margin boundary.
         """
         min_x, max_x, min_y, max_y = self._get_clamped_bounds(screen_rect)
 
@@ -128,19 +169,18 @@ class DragController(QObject):
         else:
             return QPoint(max(min_x, min(current_x, max_x)), max_y)
 
-
     def handle_press(self, event: QMouseEvent) -> bool:
         """
         Handles mouse press events to initiate dragging.
 
-        Stops any ongoing snapping animation, records the relative click offset,
-        and switches the cursor to a closed hand.
+        Interrupts active snapping animations, captures the drag offset relative
+        to the widget's top-left corner, and updates the mouse cursor.
 
         Args:
-            event: The mouse event received from the target widget.
+            event: The mouse press event.
 
         Returns:
-            bool: True if the event was consumed and dragging initiated; False otherwise.
+            bool: True if the left mouse button triggered the drag; False otherwise.
         """
         if event.button() == Qt.MouseButton.LeftButton:
             if self._snap_animation.state() == QPropertyAnimation.State.Running:
@@ -156,17 +196,19 @@ class DragController(QObject):
 
         return False
 
+
     def handle_move(self, event: QMouseEvent) -> bool:
         """
-        Handles mouse move events to update the target widget's position.
+        Handles mouse movement to update the dragged widget position.
 
-        Moves the widget while clamping coordinates within the visible screen boundaries.
+        Moves the widget following the cursor offset while constraining its
+        coordinates within the usable margins of the current screen.
 
         Args:
-            event: The mouse move event received from the target widget.
+            event: The mouse move event.
 
         Returns:
-            bool: True if the movement was handled; False otherwise.
+            bool: True if dragging is active and the event was handled; False otherwise.
         """
         if self.is_dragging and (event.buttons() & Qt.MouseButton.LeftButton):
             raw_pos = event.globalPosition().toPoint() - self._drag_offset
@@ -185,16 +227,17 @@ class DragController(QObject):
 
     def handle_release(self, event: QMouseEvent) -> bool:
         """
-        Handles mouse release events to end dragging and trigger magnetic snapping.
+        Handles mouse release events to end dragging and snap to the nearest edge.
 
-        Restores the cursor, calculates the nearest edge, and either initiates a
-        smooth snapping animation or emits `position_settled` directly if already in place.
+        Restores the pointer cursor, determines the closest edge, and either executes
+        a dynamic cubic-ease snapping animation or directly emits `position_settled`
+        if already at the destination.
 
         Args:
-            event: The mouse release event received from the target widget.
+            event: The mouse release event.
 
         Returns:
-            bool: True if the release was handled; False otherwise.
+            bool: True if dragging concluded and the release was handled; False otherwise.
         """
         if event.button() == Qt.MouseButton.LeftButton and self.is_dragging:
             self.is_dragging = False
@@ -218,9 +261,10 @@ class DragController(QObject):
                 self._snap_animation.setEndValue(target_pos)
                 self._snap_animation.start()
             else:
-                self.position_settled.emit(target_pos.x(), target_pos.y())
+                rel_x, rel_y, screen_name = self.calculate_relative_position(target_pos)
+                self.position_settled.emit(rel_x, rel_y, screen_name)
 
             event.accept()
             return True
-
+            
         return False

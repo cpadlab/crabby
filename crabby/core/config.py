@@ -21,8 +21,9 @@ class Settings(BaseSettings):
 
     SUPPORTED_PLATFORMS: List[str] = ["windows", "darwin"]
 
-    PET_POS_X: Optional[int] = None
-    PET_POS_Y: Optional[int] = None
+    PET_REL_X: Optional[float] = None
+    PET_REL_Y: Optional[float] = None
+    PET_SCREEN_NAME: Optional[str] = None
 
     @property
     def ENV_FILE(self) -> Path:
@@ -86,12 +87,8 @@ class Settings(BaseSettings):
 
         for key, value in kwargs.items():
             setattr(self, key, value)
-            set_key(
-                str(self.ENV_FILE),
-                key,
-                str(value) if value is not None else "",
-                quote_mode="never",
-            )
+            set_key(str(self.ENV_FILE), key, str(value) if value is not None else "", quote_mode="never")
+
 
     model_config = SettingsConfigDict(
         env_file=str(Path.home() / ".crabby" / ".env"),
