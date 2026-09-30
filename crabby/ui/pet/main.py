@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QApplication, QLabel, QMenu, QVBoxLayout, QWidget
 from crabby.core.config import settings
 from crabby.shared.logger import logger
 from crabby.ui.pet.movement import DragController
+from crabby.ui.pet.skin import PetSkin
 
 
 class CrabbyPet(QWidget):
@@ -18,6 +19,7 @@ class CrabbyPet(QWidget):
 
     Attributes:
         pet_size: Size in pixels for both width and height of the pet window.
+        skin: Skin manager handling pet states and visual state updates.
         drag_controller: Controller managing drag physics, clamping, and edge snapping.
         container: Visual wrapper widget hosting styled background and content.
         avatar_label: Label rendering the pet emoji or icon.
@@ -33,9 +35,11 @@ class CrabbyPet(QWidget):
         """
         super().__init__()
         self.pet_size: int = size
+        self.skin: PetSkin = PetSkin()
         self.drag_controller: DragController = DragController(self)
 
         self.drag_controller.position_settled.connect(self._on_position_changed)
+        self.drag_controller.state_changed.connect(self.skin.set_state)
 
         self._configure_window()
         self._init_ui()

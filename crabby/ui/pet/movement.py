@@ -10,6 +10,8 @@ from PyQt6.QtCore import (
 from PyQt6.QtGui import QGuiApplication, QMouseEvent, QScreen
 from PyQt6.QtWidgets import QWidget
 
+from crabby.ui.pet.skin import PetState
+
 
 class DragController(QObject):
     """
@@ -19,6 +21,7 @@ class DragController(QObject):
         position_settled: Signal emitted with `(rel_x, rel_y, screen_name)` when
             the target widget settles into its final position, where coordinates
             are normalized ratios between 0.0 and 1.0.
+        state_changed: Signal emitted with `PetState` when pet state updates.
         target: The widget being dragged and animated.
         screen_margin: Margin in pixels maintained between the widget and screen edges.
         is_dragging: Whether a mouse drag operation is actively in progress.
@@ -26,6 +29,7 @@ class DragController(QObject):
 
 
     position_settled = pyqtSignal(float, float, str)
+    state_changed = pyqtSignal(PetState)
 
 
     def __init__(self, target: QWidget, screen_margin: int = 12) -> None:
@@ -42,10 +46,19 @@ class DragController(QObject):
         self.screen_margin: int = screen_margin
         self.is_dragging: bool = False
         self._drag_offset: QPoint = QPoint()
+        self._current_state: PetState = PetState.IDLE
 
         self._snap_animation = QPropertyAnimation(self.target, b"pos", self)
         self._snap_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         self._snap_animation.finished.connect(self._on_animation_finished)
+
+    def _set_state(self, new_state: PetState) -> None:
+        """
+        Updates internal state and emits signal if changed.
+        """
+        if self._current_state != new_state:
+            self._current_state = new_state
+            self.state_changed.emit(new_state)
 
 
     def _get_current_screen(self) -> QScreen:
@@ -130,6 +143,7 @@ class DragController(QObject):
         Calculates the normalized relative position and screen identifier from
         the widget's settled pixel coordinates and emits `position_settled`.
         """
+        self._set_state(PetState.IDLE)
         rel_x, rel_y, screen_name = self.calculate_relative_position(self.target.pos())
         self.position_settled.emit(rel_x, rel_y, screen_name)
 
@@ -218,6 +232,12 @@ class DragController(QObject):
             clamped_x = max(min_x, min(raw_pos.x(), max_x))
             clamped_y = max(min_y, min(raw_pos.y(), max_y))
 
+            old_x = self.target.x()
+            if clamped_x > old_x:
+                self._set_state(PetState.MOVING_RIGHT)
+            elif clamped_x < old_x:
+                self._set_state(PetState.MOVING_LEFT)
+
             self.target.move(clamped_x, clamped_y)
             event.accept()
             return True
@@ -250,6 +270,11 @@ class DragController(QObject):
             current_pos = self.target.pos()
 
             if current_pos != target_pos:
+                if target_pos.x() > current_pos.x():
+                    self._set_state(PetState.MOVING_RIGHT)
+                elif target_pos.x() < current_pos.x():
+                    self._set_state(PetState.MOVING_LEFT)
+
                 dx = target_pos.x() - current_pos.x()
                 dy = target_pos.y() - current_pos.y()
                 distance = (dx * dx + dy * dy) ** 0.5
@@ -261,6 +286,7 @@ class DragController(QObject):
                 self._snap_animation.setEndValue(target_pos)
                 self._snap_animation.start()
             else:
+                self._set_state(PetState.IDLE)
                 rel_x, rel_y, screen_name = self.calculate_relative_position(target_pos)
                 self.position_settled.emit(rel_x, rel_y, screen_name)
 
