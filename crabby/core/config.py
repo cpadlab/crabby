@@ -21,10 +21,6 @@ class Settings(BaseSettings):
 
     SUPPORTED_PLATFORMS: List[str] = ["windows", "darwin"]
 
-    PET_REL_X: Optional[float] = None
-    PET_REL_Y: Optional[float] = None
-    PET_SCREEN_NAME: Optional[str] = None
-
     @property
     def ENV_FILE(self) -> Path:
         """Path: Target environment configuration file path."""
