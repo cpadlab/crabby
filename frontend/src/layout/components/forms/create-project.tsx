@@ -19,6 +19,14 @@ export function CreateProjectForm({ open, onOpenChange, trigger }: CreateProject
     const [name, setName] = React.useState("")
     const { handleCreateProject } = useProjects()
 
+    const handleSubmit = (e: React.FormEvent) => {
+        handleCreateProject(name, e)
+        setName("")
+        if (onOpenChange) {
+            onOpenChange(false)
+        }
+    }
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
       
@@ -32,7 +40,7 @@ export function CreateProjectForm({ open, onOpenChange, trigger }: CreateProject
                     <DialogTitle>{t("projects.create.title")}</DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleCreateProject} className="flex flex-col gap-4">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
                     <div className="flex flex-col gap-2">
                         <Label htmlFor="project-name">{t("projects.create.name_label")}</Label>
