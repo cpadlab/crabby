@@ -5,6 +5,7 @@ import urllib.error
 import urllib.request
 
 from crabby.core.config import settings
+from crabby.core.database import init_db
 from crabby.core.exceptions import ConfigurationTemplateNotFoundError
 from crabby.shared.logger import logger, setup_logger
 
@@ -92,6 +93,7 @@ def on_startup() -> None:
     current_os = settings.validate_platform()
 
     init_workspace()
+    init_db()
     log_process_info()
 
     logger.info(f"Platform detected and validated: {str(current_os).capitalize()}")
