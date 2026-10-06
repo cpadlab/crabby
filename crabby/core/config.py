@@ -21,6 +21,14 @@ class Settings(BaseSettings):
 
     SUPPORTED_PLATFORMS: List[str] = ["windows", "darwin"]
 
+    WINDOW_TITLE: str = "Crabby"
+    WINDOW_DEV_URL: str = "http://localhost:5173"
+    WINDOW_WIDTH: int = 1200
+    WINDOW_HEIGHT: int = 800
+    WINDOW_MIN_WIDTH: int = 900
+    WINDOW_MIN_HEIGHT: int = 600
+    DEBUG: bool = True
+
     @property
     def ENV_FILE(self) -> Path:
         """Path: Target environment configuration file path."""
@@ -47,6 +55,30 @@ class Settings(BaseSettings):
         """
         return Path(__file__).resolve().parent.parent.parent / "config.example"
 
+    @property
+    def FRONTEND_DIST_DIR(self) -> Path:
+        """
+        Path: Directory containing built frontend static files for production.
+        """
+        return Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+
+    @property
+    def FRONTEND_INDEX_FILE(self) -> Path:
+        """
+        Path: Path to static index.html production entry file.
+        """
+        return self.FRONTEND_DIST_DIR / "index.html"
+
+    @property
+    def WINDOW_URL(self) -> str:
+        """
+        Resolves the target entry URL for pywebview.
+        In production (when DEBUG is False and frontend/dist/index.html exists),
+        returns the static index.html file path. Otherwise, returns WINDOW_DEV_URL.
+        """
+        if not self.DEBUG and self.FRONTEND_INDEX_FILE.exists():
+            return str(self.FRONTEND_INDEX_FILE.resolve())
+        return self.WINDOW_DEV_URL
 
     def validate_platform(self) -> str:
         """
@@ -66,7 +98,6 @@ class Settings(BaseSettings):
             raise UnsupportedPlatformError(f"Platform '{current_os}' is not supported. Supported platforms: [{supported}]")
         
         return current_os
-
 
     def update_env(self, **kwargs) -> None:
         """Updates in-memory settings and persists them to the environment file.
