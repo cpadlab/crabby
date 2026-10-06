@@ -11,32 +11,46 @@ import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useConnectionsContext } from "@/context/connections"
+import type { Connection } from "@/types/connections"
 import { createConnectionFormSchema, type ConnectionFormValues } from "./schema"
 
-export interface CreateConnectionFormProps {
+export interface ManageConnectionFormProps {
+    connection?: Connection
     open?: boolean
     onOpenChange?: (open: boolean) => void
     trigger?: React.ReactNode
     onSuccess?: () => void
 }
 
-export function CreateConnectionForm({ open, onOpenChange, trigger, onSuccess }: CreateConnectionFormProps) {
-    
+export function ManageConnectionForm({
+    connection,
+    open,
+    onOpenChange,
+    trigger,
+    onSuccess,
+}: ManageConnectionFormProps) {
+
     const { t } = useTranslation()
-    const { createConnection } = useConnectionsContext()
+    const { createConnection, updateConnection } = useConnectionsContext()
     const [isSubmitting, setIsSubmitting] = React.useState(false)
 
+    const isEdit = Boolean(connection)
     const schema = React.useMemo(() => createConnectionFormSchema(t), [t])
+
+    const defaultValues: ConnectionFormValues = React.useMemo(
+        () => ({
+            name: connection?.name || "",
+            type: connection?.type || "ollama",
+            host: connection?.host || "http://localhost:11434",
+            timeout: connection?.timeout ?? 30,
+            headers: connection?.headers || [],
+        }),
+        [connection]
+    )
 
     const form = useForm<ConnectionFormValues>({
         resolver: zodResolver(schema),
-        defaultValues: {
-            name: "",
-            type: "ollama",
-            host: "http://localhost:11434",
-            timeout: 30,
-            headers: [],
-        },
+        defaultValues,
     })
 
     const { fields, append, remove } = useFieldArray({
@@ -44,19 +58,34 @@ export function CreateConnectionForm({ open, onOpenChange, trigger, onSuccess }:
         name: "headers",
     })
 
+    React.useEffect(() => {
+        if (open) {
+            form.reset(defaultValues)
+        }
+    }, [open, defaultValues, form])
+
     const handleSubmit = async (values: ConnectionFormValues) => {
         setIsSubmitting(true)
         try {
-            const res = await createConnection({
-                name: values.name,
-                type: values.type,
-                host: values.host,
-                timeout: values.timeout,
-                headers: values.headers,
-            })
+            const res = isEdit && connection
+                ? await updateConnection(connection.id, {
+                      name: values.name,
+                      host: values.host,
+                      timeout: values.timeout,
+                      headers: values.headers,
+                  })
+                : await createConnection({
+                      name: values.name,
+                      type: values.type,
+                      host: values.host,
+                      timeout: values.timeout,
+                      headers: values.headers,
+                  })
 
             if (res.success) {
-                form.reset()
+                if (!isEdit) {
+                    form.reset(defaultValues)
+                }
                 onSuccess?.()
                 onOpenChange?.(false)
             }
@@ -68,24 +97,29 @@ export function CreateConnectionForm({ open, onOpenChange, trigger, onSuccess }:
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             
-            {trigger && <DialogTrigger render={trigger as React.ReactElement} />}
+            {trigger && (
+                <DialogTrigger render={trigger as React.ReactElement} />
+            )}
 
             <DialogContent>
                 
                 <DialogHeader>
-                    <DialogTitle>{t("connections.create.title")}</DialogTitle>
+                    <DialogTitle>
+                        {isEdit ? t("connections.update.title") : t("connections.create.title")}
+                    </DialogTitle>
                 </DialogHeader>
 
                 <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
-                    
-                    <p className="text-sm text-muted-foreground">{t("connections.create.description")}</p>
+                    <p className="text-sm text-muted-foreground">
+                        {isEdit ? t("connections.update.description") : t("connections.create.description")}
+                    </p>
 
                     <ScrollArea className="max-h-[60vh] pr-3">
                         <div className="flex flex-col gap-4 p-1">
                             
                             <Controller name="name" control={form.control}
                                 render={({ field, fieldState }) => (
-                                    <div className="flex flex-col gap-2" data-invalid={fieldState.invalid}>
+                                    <div className="flex flex-col gap-1.5" data-invalid={fieldState.invalid}>
                                         <Label htmlFor={field.name}>{t("connections.form.name_label")}</Label>
                                         <InputGroup>
                                             <InputGroupAddon align="inline-start">
@@ -102,10 +136,10 @@ export function CreateConnectionForm({ open, onOpenChange, trigger, onSuccess }:
 
                             <Controller name="type" control={form.control}
                                 render={({ field, fieldState }) => (
-                                    <div className="flex flex-col gap-2" data-invalid={fieldState.invalid}>
-                                        <Label htmlFor="create-connection-type">{t("connections.form.type_label")}</Label>
+                                    <div className="flex flex-col gap-1.5" data-invalid={fieldState.invalid}>
+                                        <Label htmlFor="manage-connection-type">{t("connections.form.type_label")}</Label>
                                         <Select name={field.name} value={field.value} onValueChange={(val) => field.onChange(val as "ollama")} disabled={isSubmitting}>
-                                            <SelectTrigger id="create-connection-type" aria-invalid={fieldState.invalid} className="w-full">
+                                            <SelectTrigger id="manage-connection-type" aria-invalid={fieldState.invalid} className="w-full">
                                                 <SelectValue placeholder={t("connections.form.type_placeholder")} />
                                             </SelectTrigger>
                                             <SelectContent alignItemWithTrigger={false}>
@@ -121,7 +155,7 @@ export function CreateConnectionForm({ open, onOpenChange, trigger, onSuccess }:
 
                             <Controller name="host" control={form.control}
                                 render={({ field, fieldState }) => (
-                                    <div className="flex flex-col gap-2" data-invalid={fieldState.invalid}>
+                                    <div className="flex flex-col gap-1.5" data-invalid={fieldState.invalid}>
                                         <Label htmlFor={field.name}>{t("connections.form.host_label")}</Label>
                                         <InputGroup>
                                             <InputGroupAddon align="inline-start">
@@ -144,7 +178,7 @@ export function CreateConnectionForm({ open, onOpenChange, trigger, onSuccess }:
                                             <InputGroupAddon align="inline-start">
                                                 <ClockIcon />
                                             </InputGroupAddon>
-                                            <InputGroupInput {...field} id={field.name} type="number" step="0.5" disabled={isSubmitting} aria-invalid={fieldState.invalid} placeholder={t("connections.form.timeout_placeholder")} onChange={(e) => {const val = e.target.valueAsNumber;field.onChange(Number.isNaN(val) ? e.target.value : val)}} />
+                                            <InputGroupInput {...field} id={field.name} type="number" step="0.5" disabled={isSubmitting} aria-invalid={fieldState.invalid} placeholder={t("connections.form.timeout_placeholder")} onChange={(e) => { const val = e.target.valueAsNumber;field.onChange(Number.isNaN(val) ? e.target.value : val)}}/>
                                         </InputGroup>
                                         {fieldState.invalid && (
                                             <span className="text-xs text-destructive">{fieldState.error?.message}</span>
@@ -155,16 +189,15 @@ export function CreateConnectionForm({ open, onOpenChange, trigger, onSuccess }:
 
                             <div className="flex flex-col gap-2">
                                 
-                                <div className="flex gap-2 items-center justify-between">
+                                <div className="flex items-center gap-4 justify-between">
                                     <Label className="truncate">{t("connections.form.headers_label")}</Label>
-                                    <Button type="button" variant="outline" size="xs" disabled={isSubmitting} onClick={() => append({ key: "", value: "" })}>
-                                        <PlusIcon />
-                                        <span>{t("connections.form.add_header_button")}</span>
+                                    <Button type="button" variant="outline" size="xs" disabled={isSubmitting} onClick={() => append({ key: "", value: "" })}> <PlusIcon />
+                                        {t("connections.form.add_header_button")}
                                     </Button>
                                 </div>
 
                                 {fields.map((headerField, index) => (
-                                    <div key={headerField.id} className="flex items-start gap-2">
+                                    <div key={headerField.id} className="flex items-stretch gap-2">
                                         
                                         <Controller name={`headers.${index}.key`} control={form.control}
                                             render={({ field, fieldState }) => (
@@ -182,16 +215,14 @@ export function CreateConnectionForm({ open, onOpenChange, trigger, onSuccess }:
                                             )}
                                         />
 
-                                        <Controller
-                                            name={`headers.${index}.value`}
-                                            control={form.control}
+                                        <Controller name={`headers.${index}.value`} control={form.control}
                                             render={({ field, fieldState }) => (
                                                 <div className="flex-1 flex flex-col gap-1" data-invalid={fieldState.invalid}>
                                                     <InputGroup>
                                                         <InputGroupAddon align="inline-start">
                                                             <TagIcon />
                                                         </InputGroupAddon>
-                                                        <InputGroupInput {...field} disabled={isSubmitting} aria-invalid={fieldState.invalid} placeholder={t("connections.form.header_value_placeholder")}/>
+                                                        <InputGroupInput {...field} disabled={isSubmitting} aria-invalid={fieldState.invalid} placeholder={t("connections.form.header_value_placeholder")} />
                                                     </InputGroup>
                                                     {fieldState.invalid && (
                                                         <span className="text-xs text-destructive">{fieldState.error?.message}</span>
@@ -200,12 +231,15 @@ export function CreateConnectionForm({ open, onOpenChange, trigger, onSuccess }:
                                             )}
                                         />
 
-                                        <Button type="button" variant="ghost" size="icon-sm" disabled={isSubmitting} onClick={() => remove(index)} className="mt-0.5 text-muted-foreground hover:text-destructive">
-                                            <Trash2Icon className="w-4 h-4" />
-                                        </Button>
+                                        <div className="flex items-center">
+                                            <Button type="button" variant="ghost" size="icon-sm" disabled={isSubmitting} onClick={() => remove(index)} className="text-muted-foreground hover:text-destructive">
+                                                <Trash2Icon className="w-4 h-4" />
+                                            </Button>
+                                        </div>
 
                                     </div>
                                 ))}
+
                             </div>
 
                         </div>
@@ -213,15 +247,16 @@ export function CreateConnectionForm({ open, onOpenChange, trigger, onSuccess }:
 
                     <DialogFooter>
                         <Button type="submit" disabled={isSubmitting}>
-                            {t("connections.create.submit_button")}
+                            {isEdit ? t("connections.update.submit_button") : t("connections.create.submit_button")}
                         </Button>
                     </DialogFooter>
 
                 </form>
                 
             </DialogContent>
+            
         </Dialog>
     )
 }
 
-export default CreateConnectionForm
+export default ManageConnectionForm
