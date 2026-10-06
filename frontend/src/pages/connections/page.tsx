@@ -1,6 +1,8 @@
-import { useTranslation, Trans } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
+
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { ConnectionsSection } from "./components/sections/connections/section"
 
 export function ConnectionsPage() {
     
@@ -8,7 +10,7 @@ export function ConnectionsPage() {
     const isMobile = useIsMobile()
 
     return (
-        <div className="flex flex-col gap-2 xl:w-[50%] w-[90%] py-12 md:w-[75%] mx-auto">
+        <div className="flex flex-col gap-6 xl:w-[50%] w-[90%] md:py-12 py-4 md:w-[75%] mx-auto">
             
             <div>
                 <div className="flex items-center gap-2">
@@ -24,6 +26,8 @@ export function ConnectionsPage() {
                 </p>
             </div>
 
+            <ConnectionsSection />
+           
         </div>
     )
 }

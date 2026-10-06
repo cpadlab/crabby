@@ -73,6 +73,82 @@
     },
     "connections": {
         "title": "My Connections",
-        "description": "Manage model connections and <1>MCPs</1> here."
+        "description": "Manage model connections and <1>MCPs</1> here.",
+        "section": {
+            "title": "Connections",
+            "empty_title": "No connections configured yet",
+            "empty_description": "Add your first connection to start interacting with local models.",
+            "create_button": "Create Connection"
+        },
+        "card": {
+            "timeout": "Timeout: {{timeout}}s",
+            "headers_count_one": "{{count}} header configured",
+            "headers_count_other": "{{count}} headers configured",
+            "available_models": "Available models:",
+            "check_models": "Check models",
+            "sync_models": "Sync models",
+            "no_models": "No models are available",
+            "menu": {
+                "test_connection": "Test connection",
+                "sync_models": "Sync models",
+                "edit": "Edit",
+                "delete": "Delete"
+            },
+            "testing_connection": "Testing connection...",
+            "connection_ok": "Connection successful",
+            "connection_failed": "Could not connect to host"
+        },
+        "form": {
+            "name_label": "Connection Name",
+            "name_placeholder": "e.g. Ollama Local Server",
+            "type_label": "Connection Type",
+            "type_placeholder": "Select type",
+            "host_label": "Host / URL",
+            "host_placeholder": "http://localhost:11434",
+            "timeout_label": "Timeout (seconds)",
+            "timeout_placeholder": "30",
+            "headers_label": "Custom Headers",
+            "header_key_placeholder": "Key (e.g. Authorization)",
+            "header_value_placeholder": "Value (e.g. Bearer token)",
+            "add_header_button": "Add Header"
+        },
+        "create": {
+            "title": "New Connection",
+            "description": "Configure connection details to connect with your Ollama server.",
+            "submit_button": "Save Connection"
+        },
+        "update": {
+            "title": "Edit Connection",
+            "description": "Modify the access settings of your connection.",
+            "submit_button": "Save Changes"
+        },
+        "delete": {
+            "title": "Delete connection?",
+            "description": "This action will delete the connection \"{{name}}\". It cannot be undone.",
+            "submit_button": "Delete",
+            "cancel_button": "Cancel"
+        },
+        "success": {
+            "title": "Success",
+            "create_success": "Connection created successfully.",
+            "update_success": "Connection updated successfully.",
+            "delete_success": "Connection deleted successfully."
+        },
+        "validation": {
+            "name_required": "Connection name is required.",
+            "host_required": "Host or URL is required.",
+            "timeout_min": "Timeout must be at least 0.5 seconds.",
+            "header_key_required": "Header key is required.",
+            "header_value_required": "Header value is required."
+        },
+        "errors": {
+            "title": "Connection Error",
+            "load_failed": "Failed to load connections.",
+            "create_failed": "Failed to create connection.",
+            "update_failed": "Failed to update connection.",
+            "delete_failed": "Failed to delete connection.",
+            "pywebview_not_available": "PyWebView API is not available.",
+            "unexpected_error": "Unexpected communication error."
+        }
     }
 }

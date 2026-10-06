@@ -73,6 +73,82 @@
     },
     "connections": {
         "title": "Mis Conexiones",
-        "description": "Aquí se gestionan las conexiones con los modelos y los <1>MCPs</1>."
+        "description": "Aquí se gestionan las conexiones con los modelos y los <1>MCPs</1>.",
+        "section": {
+            "title": "Conexiones",
+            "empty_title": "No hay conexiones configuradas aún",
+            "empty_description": "Añade tu primera conexión para empezar a interactuar con modelos locales.",
+            "create_button": "Crear Conexión"
+        },
+        "card": {
+            "timeout": "Timeout: {{timeout}}s",
+            "headers_count_one": "{{count}} header configurado",
+            "headers_count_other": "{{count}} headers configurados",
+            "available_models": "Modelos disponibles:",
+            "check_models": "Comprobar modelos",
+            "sync_models": "Sincronizar modelos",
+            "no_models": "No hay modelos disponibles",
+            "menu": {
+                "test_connection": "Probar conexión",
+                "sync_models": "Sincronizar modelos",
+                "edit": "Editar",
+                "delete": "Eliminar"
+            },
+            "testing_connection": "Comprobando conexión...",
+            "connection_ok": "Conexión exitosa",
+            "connection_failed": "No se pudo conectar con el host"
+        },
+        "form": {
+            "name_label": "Nombre de la Conexión",
+            "name_placeholder": "Ej. Ollama Server Local",
+            "type_label": "Tipo de Conexión",
+            "type_placeholder": "Selecciona el tipo",
+            "host_label": "Host / URL",
+            "host_placeholder": "http://localhost:11434",
+            "timeout_label": "Timeout (segundos)",
+            "timeout_placeholder": "30",
+            "headers_label": "Cabeceras Personalizadas (Headers)",
+            "header_key_placeholder": "Clave (ej. Authorization)",
+            "header_value_placeholder": "Valor (ej. Bearer token)",
+            "add_header_button": "Añadir Cabecera"
+        },
+        "create": {
+            "title": "Nueva Conexión",
+            "description": "Configura los datos de acceso para conectar con tu servidor de Ollama.",
+            "submit_button": "Guardar Conexión"
+        },
+        "update": {
+            "title": "Editar Conexión",
+            "description": "Modifica los datos de acceso de tu conexión.",
+            "submit_button": "Guardar Cambios"
+        },
+        "delete": {
+            "title": "¿Eliminar conexión?",
+            "description": "Esta acción eliminará la conexión \"{{name}}\". No se puede deshacer.",
+            "submit_button": "Eliminar",
+            "cancel_button": "Cancelar"
+        },
+        "success": {
+            "title": "Éxito",
+            "create_success": "La conexión se ha creado correctamente.",
+            "update_success": "La conexión se ha actualizado correctamente.",
+            "delete_success": "La conexión se ha eliminado correctamente."
+        },
+        "validation": {
+            "name_required": "El nombre de la conexión es obligatorio.",
+            "host_required": "El host o URL es obligatorio.",
+            "timeout_min": "El timeout debe ser de al menos 0.5 segundos.",
+            "header_key_required": "La clave de la cabecera es obligatoria.",
+            "header_value_required": "El valor de la cabecera es obligatorio."
+        },
+        "errors": {
+            "title": "Error de Conexión",
+            "load_failed": "Error al cargar las conexiones.",
+            "create_failed": "Error al crear la conexión.",
+            "update_failed": "Error al actualizar la conexión.",
+            "delete_failed": "Error al eliminar la conexión.",
+            "pywebview_not_available": "La API de PyWebView no está disponible.",
+            "unexpected_error": "Error inesperado de comunicación."
+        }
     }
 }
