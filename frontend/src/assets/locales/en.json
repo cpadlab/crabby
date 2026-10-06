@@ -73,6 +73,6 @@
     },
     "connections": {
         "title": "My Connections",
-        "description": "Manage model connections and MCPs here."
+        "description": "Manage model connections and <1>MCPs</1> here."
     }
 }

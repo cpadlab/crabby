@@ -73,6 +73,6 @@
     },
     "connections": {
         "title": "Mis Conexiones",
-        "description": "Aquí se gestionan las conexiones con los modelos y los MCPs."
+        "description": "Aquí se gestionan las conexiones con los modelos y los <1>MCPs</1>."
     }
 }
