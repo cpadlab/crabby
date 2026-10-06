@@ -24,7 +24,7 @@ export function ConnectionsSummary() {
                     </span>
                     <div className="flex items-baseline gap-2 mt-0.5">
                         <span className="text-2xl font-bold ">{total}</span>
-                        <span className="text-xs text-muted-foreground">{t("connections.summary.configured")}</span>
+                        <span className="text-xs truncate text-muted-foreground">{t("connections.summary.configured")}</span>
                     </div>
                 </div>
             </div>
@@ -39,7 +39,7 @@ export function ConnectionsSummary() {
                     </span>
                     <div className="flex items-baseline gap-2 mt-0.5">
                         <span className="text-2xl font-bold ">{totalModels}</span>
-                        <span className="text-xs text-muted-foreground">{t("connections.summary.detected")}</span>
+                        <span className="text-xs truncate text-muted-foreground">{t("connections.summary.detected")}</span>
                     </div>
                 </div>
             </div>
@@ -54,7 +54,7 @@ export function ConnectionsSummary() {
                     </span>
                     <div className="flex items-baseline gap-2 mt-0.5">
                         <span className="text-2xl font-bold">{ollamaCount}</span>
-                        <span className="text-xs text-muted-foreground">Ollama</span>
+                        <span className="text-xs truncate text-muted-foreground">Ollama</span>
                     </div>
                 </div>
             </div>
