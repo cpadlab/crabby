@@ -1,5 +1,5 @@
 from crabby.core.lifespan.startup import on_startup
-from crabby.ui.window import launch_window
+from crabby.ui.window.controller import launch_window
 
 
 def main() -> None:
