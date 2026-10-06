@@ -86,21 +86,21 @@ export function ConnectionCard({ connection }: ConnectionCardProps) {
         <>
             <div className="bg-card overflow-hidden border rounded-4xl transition-colors hover:border-border/80">
                 
-                <div className="flex p-4 items-center justify-between gap-4">
+                <div className="flex p-4 items-start sm:items-center justify-between gap-3 sm:gap-4">
                     
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2.5 bg-primary text-primary-foreground font-bold rounded-2xl shrink-0 text-sm">
+                    <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
+                        <div className="p-2.5 bg-primary text-primary-foreground font-bold rounded-2xl shrink-0 text-sm flex items-center justify-center min-w-[38px] h-[38px] mt-0.5 sm:mt-0">
                             <span>{initials}</span>
                         </div>
-                        <div className="flex flex-col gap-1 min-w-0">
-                            <p className="text-lg leading-none font-medium truncate">{connection.name}</p>
-                            <div className="flex flex-wrap items-center gap-2">
-                                <Badge variant="outline" className="gap-1.5">
-                                    <div className={`w-2 h-2 rounded-full ${isConnected === true ? "bg-emerald-500" : isConnected === false ? "bg-destructive" : "bg-amber-500"}`} />
-                                    <span className="truncate max-w-xs">{connection.host}</span>
+                        <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                            <p className="text-base sm:text-lg leading-none font-medium truncate">{connection.name}</p>
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm">
+                                <Badge variant="outline" className="gap-1.5 max-w-full">
+                                    <div className={`w-2 h-2 rounded-full shrink-0 ${isConnected === true ? "bg-emerald-500" : isConnected === false ? "bg-destructive" : "bg-amber-500"}`} />
+                                    <span className="truncate max-w-[160px] sm:max-w-xs">{connection.host}</span>
                                 </Badge>
-                                <p className="text-muted-foreground text-sm">• {t("connections.card.timeout", { timeout: connection.timeout })}</p>
-                                <p className="text-muted-foreground text-sm">•{" "}{t(headerCount === 1 ? "connections.card.headers_count_one" : "connections.card.headers_count_other", { count: headerCount })}</p>
+                                <span className="text-muted-foreground">• {t("connections.card.timeout", { timeout: connection.timeout })}</span>
+                                <span className="text-muted-foreground">• {t(headerCount === 1 ? "connections.card.headers_count_one" : "connections.card.headers_count_other", { count: headerCount })}</span>
                             </div>
                         </div>
                     </div>
@@ -109,7 +109,7 @@ export function ConnectionCard({ connection }: ConnectionCardProps) {
 
                         <DropdownMenuTrigger
                             render={
-                                <Button size="icon-sm" variant="ghost" className="shrink-0">
+                                <Button size="icon-sm" variant="ghost" className="shrink-0 -mt-1 sm:mt-0">
                                     <MoreVerticalIcon className="w-4 h-4" />
                                 </Button>
                             }
@@ -156,7 +156,7 @@ export function ConnectionCard({ connection }: ConnectionCardProps) {
                         )}
                     </div>
                     
-                    <div className="flex">
+                    <div className="sm:flex hidden">
                         <Button size="xs" variant="outline" onClick={handleSyncModels} disabled={isSyncing || isChecking}>
                             <RefreshCcwIcon className={`w-3.5 h-3.5 mr-1 ${isSyncing ? "animate-spin" : ""}`} />
                             <span>{t("connections.card.check_models")}</span>

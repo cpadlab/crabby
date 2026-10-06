@@ -78,7 +78,9 @@
             "title": "Conexiones",
             "empty_title": "No hay conexiones configuradas aún",
             "empty_description": "Añade tu primera conexión para empezar a interactuar con modelos locales.",
-            "create_button": "Crear Conexión"
+            "create_button": "Crear Conexión",
+            "load_more": "Cargar más conexiones",
+            "loading_more": "Cargando..."
         },
         "card": {
             "timeout": "Timeout: {{timeout}}s",

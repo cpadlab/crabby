@@ -78,7 +78,9 @@
             "title": "Connections",
             "empty_title": "No connections configured yet",
             "empty_description": "Add your first connection to start interacting with local models.",
-            "create_button": "Create Connection"
+            "create_button": "Create Connection",
+            "load_more": "Load more connections",
+            "loading_more": "Loading..."
         },
         "card": {
             "timeout": "Timeout: {{timeout}}s",

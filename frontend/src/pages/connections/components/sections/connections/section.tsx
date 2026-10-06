@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import { PlusIcon } from "lucide-react"
+import { Loader2Icon, PlusIcon, RefreshCwIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useConnectionsContext } from "@/context/connections"
@@ -10,7 +10,7 @@ import { ConnectionsEmptyState } from "./empty"
 
 export const ConnectionsSection = () => {
 
-    const { connections } = useConnectionsContext()
+    const { connections, hasMore, loadMore, loading } = useConnectionsContext()
     const [createOpen, setCreateOpen] = React.useState(false)
     const { t } = useTranslation()
 
@@ -31,9 +31,29 @@ export const ConnectionsSection = () => {
 
             {connections.length > 0 ? (
                 <div className="flex flex-col gap-4">
+                    
                     {connections.map((connection) => (
                         <ConnectionCard key={connection.id} connection={connection} />
                     ))}
+
+                    {hasMore && (
+                        <div className="flex justify-center">
+                            <Button variant="outline" size="sm" onClick={loadMore} disabled={loading} className="w-full sm:w-auto">
+                                {loading ? (
+                                    <>
+                                        <Loader2Icon />
+                                        {t("connections.section.loading_more")}
+                                    </>
+                                ) : (
+                                    <>
+                                        <RefreshCwIcon />
+                                        {t("connections.section.load_more")}
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    )}
+
                 </div>
             ) : (
                 <ConnectionsEmptyState onCreateClick={() => setCreateOpen(true)} />
@@ -44,4 +64,3 @@ export const ConnectionsSection = () => {
 }
 
 export default ConnectionsSection
-
