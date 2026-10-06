@@ -74,6 +74,14 @@
     "connections": {
         "title": "My Connections",
         "description": "Manage model connections and <1>MCPs</1> here.",
+        "summary": {
+            "total_connections": "Total Connections",
+            "configured": "registered",
+            "total_models": "Detected Models",
+            "detected": "available",
+            "providers": "Providers",
+            "ollama_provider": "Ollama"
+        },
         "section": {
             "title": "Connections",
             "empty_title": "No connections configured yet",

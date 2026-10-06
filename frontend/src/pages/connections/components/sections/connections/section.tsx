@@ -7,6 +7,7 @@ import { useConnectionsContext } from "@/context/connections"
 import { ManageConnectionForm } from "../../forms/connections/manage"
 import { ConnectionCard } from "./card"
 import { ConnectionsEmptyState } from "./empty"
+import { ConnectionsSummary } from "./summary"
 
 export const ConnectionsSection = () => {
 
@@ -28,6 +29,8 @@ export const ConnectionsSection = () => {
                     }
                 />
             </div>
+
+            <ConnectionsSummary />
 
             {connections.length > 0 ? (
                 <div className="flex flex-col gap-4">

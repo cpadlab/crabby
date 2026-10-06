@@ -74,6 +74,14 @@
     "connections": {
         "title": "Mis Conexiones",
         "description": "Aquí se gestionan las conexiones con los modelos y los <1>MCPs</1>.",
+        "summary": {
+            "total_connections": "Total Conexiones",
+            "configured": "registradas",
+            "total_models": "Modelos Detectados",
+            "detected": "disponibles",
+            "providers": "Proveedores",
+            "ollama_provider": "Ollama"
+        },
         "section": {
             "title": "Conexiones",
             "empty_title": "No hay conexiones configuradas aún",
