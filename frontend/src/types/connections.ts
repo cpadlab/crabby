@@ -46,3 +46,4 @@ export interface PyWebViewResponse<T = unknown> {
     connected?: boolean
     error?: string
 }
+
