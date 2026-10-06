@@ -19,9 +19,23 @@
         },
         "menu": {
             "new_project": "Nuevo Proyecto",
+            "new_chat": "Nuevo Chat",
+            "rename_project": "Renombrar proyecto",
+            "delete_project": "Eliminar proyecto",
             "sort_by": "Ordenar por",
             "sort_recent": "Más reciente a más antiguo",
             "sort_oldest": "Más antiguo a más reciente"
+        },
+        "rename": {
+            "title": "Renombrar Proyecto",
+            "name_label": "Nombre del Proyecto",
+            "submit_button": "Guardar Cambios"
+        },
+        "delete": {
+            "title": "¿Eliminar proyecto?",
+            "description": "Esta acción eliminará el proyecto y todos sus chats asociados. No se puede deshacer.",
+            "submit_button": "Eliminar",
+            "cancel_button": "Cancelar"
         }
     }
 }

@@ -19,9 +19,23 @@
         },
         "menu": {
             "new_project": "New Project",
+            "new_chat": "New Chat",
+            "rename_project": "Rename project",
+            "delete_project": "Delete project",
             "sort_by": "Sort by",
             "sort_recent": "Most recent to oldest",
             "sort_oldest": "Oldest to most recent"
+        },
+        "rename": {
+            "title": "Rename Project",
+            "name_label": "Project Name",
+            "submit_button": "Save Changes"
+        },
+        "delete": {
+            "title": "Delete project?",
+            "description": "This action will delete the project and all its associated chats. It cannot be undone.",
+            "submit_button": "Delete",
+            "cancel_button": "Cancel"
         }
     }
 }
