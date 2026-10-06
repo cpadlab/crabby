@@ -28,6 +28,16 @@ export function ConnectionCard({ connection }: ConnectionCardProps) {
     const [isSyncing, setIsSyncing] = React.useState(false)
     const [models, setModels] = React.useState<string[]>(connection.models || [])
 
+    React.useEffect(() => {
+        let isMounted = true
+        checkConnection(connection.id).then((ok) => {
+            if (isMounted) setIsConnected(ok)
+        })
+        return () => {
+            isMounted = false
+        }
+    }, [connection.id, checkConnection])
+
     const handleTestConnection = async () => {
         setIsChecking(true)
         try {
