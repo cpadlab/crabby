@@ -87,6 +87,10 @@ class ConnectionController:
             raise ValueError("Connection timeout must be a positive number.")
 
         data.host = self._normalize_host(data.host)
+
+        if not self.check_connection_by_url(data.host, data.headers, data.timeout):
+            raise ValueError(f"Unable to connect to the server at '{data.host}'. Check the URL and network permissions.")
+
         now = self._now_iso()
         conn_id = f"conn_{uuid.uuid4().hex[:12]}"
         headers_json = json.dumps([h.model_dump() for h in data.headers])
