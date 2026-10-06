@@ -3,7 +3,7 @@ import webview
 
 from crabby.core.config import settings
 from crabby.shared.logger import logger
-from crabby.ui.window.api import WindowAPI
+from crabby.ui.window.bridge.api import WindowAPI
 
 
 class WindowController:
