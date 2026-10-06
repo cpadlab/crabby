@@ -1,4 +1,5 @@
 from crabby.ui.window.bridge.connections import ConnectionsBridge
+from crabby.ui.window.bridge.mcp import MCPBridge
 
 
 class WindowAPI:
@@ -8,4 +9,5 @@ class WindowAPI:
 
     def __init__(self) -> None:
         self.connections = ConnectionsBridge()
+        self.mcp = MCPBridge()
 
