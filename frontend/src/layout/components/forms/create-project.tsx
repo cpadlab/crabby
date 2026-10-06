@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
+import { useProjects } from "@/hooks/use-projects"
 
 export interface CreateProjectFormProps {
     open?: boolean
@@ -16,10 +17,7 @@ export function CreateProjectForm({ open, onOpenChange, trigger }: CreateProject
     
     const { t } = useTranslation()
     const [name, setName] = React.useState("")
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-    }
+    const { handleCreateProject } = useProjects()
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -34,7 +32,7 @@ export function CreateProjectForm({ open, onOpenChange, trigger }: CreateProject
                     <DialogTitle>{t("projects.create.title")}</DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <form onSubmit={handleCreateProject} className="flex flex-col gap-4">
 
                     <div className="flex flex-col gap-2">
                         <Label htmlFor="project-name">{t("projects.create.name_label")}</Label>
