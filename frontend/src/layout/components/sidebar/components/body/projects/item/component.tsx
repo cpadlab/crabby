@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next"
-import { ChevronRightIcon } from "lucide-react"
 
-import { SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar"
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
+import { SidebarMenuItem, SidebarMenuSub, SidebarMenuSubItem } from "@/components/ui/sidebar"
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible"
+import { ProjectItemRow } from "./project"
+import { ProjectChatItem } from "./chat"
 import type { Project } from "@/types/projects"
 
 export interface ProjectItemProps {
@@ -17,15 +18,8 @@ export function ProjectItem({ project }: ProjectItemProps) {
         <Collapsible defaultOpen className="group/collapsible">
             <SidebarMenuItem>
                 
-                <CollapsibleTrigger
-                    render={
-                        <SidebarMenuButton tooltip={project.name}>
-                            <span className="truncate">{project.name}</span>
-                            <ChevronRightIcon className="text-muted-foreground" />
-                        </SidebarMenuButton>
-                    }
-                />
-                
+                <ProjectItemRow project={project} />
+
                 <CollapsibleContent>
                     <SidebarMenuSub className="w-full">
                         {project.chats.length === 0 ? (
@@ -36,11 +30,7 @@ export function ProjectItem({ project }: ProjectItemProps) {
                             </SidebarMenuSubItem>
                         ) : (
                             project.chats.map((chat) => (
-                                <SidebarMenuSubItem key={chat.id} className="w-full">
-                                    <SidebarMenuSubButton className="w-full">
-                                        <span>{chat.name}</span>
-                                    </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
+                                <ProjectChatItem key={chat.id} chat={chat} />
                             ))
                         )}
                     </SidebarMenuSub>
@@ -52,3 +42,4 @@ export function ProjectItem({ project }: ProjectItemProps) {
 }
 
 export default ProjectItem
+

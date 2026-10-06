@@ -68,3 +68,4 @@ export function RenameChatForm({ chat, open, onOpenChange, trigger }: RenameChat
 }
 
 export default RenameChatForm
+
