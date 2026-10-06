@@ -1,7 +1,7 @@
 import * as React from "react"
 
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from "@/components/ui/sidebar"
-import { CreateProjectForm } from "@/layout/components/forms/create-project"
+import { CreateProjectForm } from "@/layout/components/forms/project/create"
 import { useProjects } from "@/hooks/use-projects"
 import { ProjectsHeader } from "./header"
 import { ProjectItem } from "./item"

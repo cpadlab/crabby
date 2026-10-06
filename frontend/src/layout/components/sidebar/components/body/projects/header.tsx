@@ -3,7 +3,7 @@ import { MoreHorizontalIcon, PlusIcon, ArrowUpDownIcon, ClockIcon, HistoryIcon }
 
 import { SidebarGroupAction, SidebarGroupLabel } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { CreateProjectForm } from "@/layout/components/forms/create-project"
+import { CreateProjectForm } from "@/layout/components/forms/project/create"
 import { useProjects } from "@/hooks/use-projects"
 
 export interface ProjectsHeaderProps {
