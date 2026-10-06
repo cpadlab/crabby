@@ -2,7 +2,9 @@ import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 import { SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
 import { navMainItems } from "../../nav.config"
+import { SidebarPinned } from "./pinned/component"
 import { SidebarProjects } from "./projects/component"
+import { SidebarChats } from "./chats/component"
 
 export function LeftbarBody() {
 
@@ -26,7 +28,9 @@ export function LeftbarBody() {
                 </SidebarGroupContent>
             </SidebarGroup>
 
+            <SidebarPinned />
             <SidebarProjects />
+            <SidebarChats />
 
         </SidebarContent>
     )

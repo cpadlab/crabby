@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import { MoreHorizontalIcon, PencilIcon, PinOffIcon, MessageSquareIcon } from "lucide-react"
+import { MoreHorizontalIcon, PencilIcon, PinOffIcon } from "lucide-react"
 
 import { SidebarMenuItem, SidebarMenuButton, SidebarMenuAction } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"

@@ -1,6 +1,7 @@
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { FolderPenIcon, LightbulbIcon } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
@@ -11,16 +12,25 @@ export interface CreateProjectFormProps {
     open?: boolean
     onOpenChange?: (open: boolean) => void
     trigger?: React.ReactNode
+    onCreateProject?: (name: string) => void
 }
 
-export function CreateProjectForm({ open, onOpenChange, trigger }: CreateProjectFormProps) {
+export function CreateProjectForm({ open, onOpenChange, trigger, onCreateProject }: CreateProjectFormProps) {
     
     const { t } = useTranslation()
     const [name, setName] = React.useState("")
     const { handleCreateProject } = useProjects()
 
     const handleSubmit = (e: React.FormEvent) => {
-        handleCreateProject(name, e)
+        e.preventDefault()
+        if (!name.trim()) return
+
+        if (onCreateProject) {
+            onCreateProject(name)
+        } else {
+            handleCreateProject(name)
+        }
+
         setName("")
         if (onOpenChange) {
             onOpenChange(false)
