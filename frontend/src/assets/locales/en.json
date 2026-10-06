@@ -1,3 +1,27 @@
 {
-    "crabby": "Crabby"
+    "crabby": "Crabby",
+    "sidebar": {
+        "new_conversation": "New Conversation",
+        "search_conversations": "Search Conversations",
+        "my_connections": "My Connections",
+        "my_agents": "My Agents",
+        "projects": "Projects"
+    },
+    "projects": {
+        "no_projects": "No projects yet",
+        "no_chats": "No chats yet",
+        "create": {
+            "title": "Create Project",
+            "description": "Projects keep chats, files, and custom instructions in one place. Use them for ongoing work or just to keep everything organized.",
+            "name_label": "Project Name",
+            "placeholder": "Project name...",
+            "submit_button": "Create Project"
+        },
+        "menu": {
+            "new_project": "New Project",
+            "sort_by": "Sort by",
+            "sort_recent": "Most recent to oldest",
+            "sort_oldest": "Oldest to most recent"
+        }
+    }
 }
