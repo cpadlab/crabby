@@ -1,5 +1,5 @@
 from crabby.core.lifespan.startup import on_startup
-from crabby.ui.pet.main import launch_pet
+from crabby.ui.window import launch_window
 
 
 def main() -> None:
@@ -10,7 +10,7 @@ def main() -> None:
     and bootstraps the application context.
     """
     on_startup()
-    launch_pet()
+    launch_window()
 
 
 if __name__ == "__main__":
