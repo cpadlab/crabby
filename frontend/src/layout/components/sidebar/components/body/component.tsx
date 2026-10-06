@@ -1,17 +1,16 @@
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
-import { PlusIcon } from "lucide-react"
-import { SidebarContent, SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
-import { CreateProjectForm } from "@/layout/components/forms/create-project"
-import { navMainItems } from "../nav.config"
+import { SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
+import { navMainItems } from "../../nav.config"
+import { SidebarProjects } from "./projects"
 
 export function LeftbarBody() {
-    
+
     const { t } = useTranslation()
 
     return (
         <SidebarContent>
-
+            
             <SidebarGroup>
                 <SidebarGroupContent>
                     <SidebarMenu>
@@ -27,17 +26,7 @@ export function LeftbarBody() {
                 </SidebarGroupContent>
             </SidebarGroup>
 
-            <SidebarGroup>
-                <SidebarGroupLabel>{t('sidebar.projects')}</SidebarGroupLabel>
-                <CreateProjectForm
-                    trigger={
-                        <SidebarGroupAction title={t('sidebar.projects')}>
-                            <PlusIcon />
-                        </SidebarGroupAction>
-                    }
-                />
-                <SidebarGroupContent />
-            </SidebarGroup>
+            <SidebarProjects />
 
         </SidebarContent>
     )

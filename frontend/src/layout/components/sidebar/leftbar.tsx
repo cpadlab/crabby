@@ -1,5 +1,5 @@
 import { Sidebar, SidebarRail } from "@/components/ui/sidebar"
-import { LeftbarBody } from "./components/body"
+import { LeftbarBody } from "./components/body/component"
 
 export const LeftBar = () => {
     return (
