@@ -20,7 +20,7 @@ export function ProjectChatItem({ chat }: ProjectChatItemProps) {
 
     return (
         <>
-            <SidebarMenuSubItem className="w-full">
+            <SidebarMenuSubItem className="group/chat-item relative w-full">
                 
                 <SidebarMenuSubButton className="w-full">
                     <span>{chat.name}</span>
@@ -30,7 +30,7 @@ export function ProjectChatItem({ chat }: ProjectChatItemProps) {
 
                     <DropdownMenuTrigger
                         render={
-                            <SidebarMenuAction className="right-1 bg-sidebar" showOnHover title={t("sidebar.projects")}>
+                            <SidebarMenuAction className="right-1 top-1/2 -translate-y-1/2 text-muted-foreground opacity-0 group-hover/chat-item:opacity-100 hover:opacity-100 focus:opacity-100 aria-expanded:opacity-100 bg-sidebar-accent" title={t("sidebar.projects")}>
                                 <MoreHorizontalIcon />
                             </SidebarMenuAction>
                         }
@@ -60,4 +60,3 @@ export function ProjectChatItem({ chat }: ProjectChatItemProps) {
 }
 
 export default ProjectChatItem
-

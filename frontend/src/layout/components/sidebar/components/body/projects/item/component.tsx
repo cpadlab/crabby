@@ -13,6 +13,7 @@ export interface ProjectItemProps {
 export function ProjectItem({ project }: ProjectItemProps) {
     
     const { t } = useTranslation()
+    const visibleChats = project.chats.filter((chat) => !chat.pinned)
 
     return (
         <Collapsible defaultOpen className="group/collapsible">
@@ -22,14 +23,14 @@ export function ProjectItem({ project }: ProjectItemProps) {
 
                 <CollapsibleContent>
                     <SidebarMenuSub className="w-full">
-                        {project.chats.length === 0 ? (
+                        {visibleChats.length === 0 ? (
                             <SidebarMenuSubItem className="w-full">
                                 <div className="px-2 text-xs text-muted-foreground">
                                     {t('projects.no_chats')}
                                 </div>
                             </SidebarMenuSubItem>
                         ) : (
-                            project.chats.map((chat) => (
+                            visibleChats.map((chat) => (
                                 <ProjectChatItem key={chat.id} chat={chat} />
                             ))
                         )}
@@ -42,4 +43,3 @@ export function ProjectItem({ project }: ProjectItemProps) {
 }
 
 export default ProjectItem
-
