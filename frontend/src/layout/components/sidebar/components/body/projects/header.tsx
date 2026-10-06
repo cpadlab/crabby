@@ -3,17 +3,16 @@ import { MoreHorizontalIcon, PlusIcon, ArrowUpDownIcon, ClockIcon, HistoryIcon }
 
 import { SidebarGroupAction, SidebarGroupLabel } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { CreateProjectForm } from "@/layout/components/forms/project/create"
-import { useProjects } from "@/hooks/use-projects"
 
 export interface ProjectsHeaderProps {
     setIsCreateOpen: (open: boolean) => void
+    sortByRecent: () => void
+    sortByOldest: () => void
 }
 
-export function ProjectsHeader({ setIsCreateOpen }: ProjectsHeaderProps) {
+export function ProjectsHeader({ setIsCreateOpen, sortByRecent, sortByOldest }: ProjectsHeaderProps) {
     
     const { t } = useTranslation()
-    const { sortByRecent, sortByOldest } = useProjects()
 
     return (
         <>
@@ -57,13 +56,9 @@ export function ProjectsHeader({ setIsCreateOpen }: ProjectsHeaderProps) {
                 
             </DropdownMenu>
 
-            <CreateProjectForm
-                trigger={
-                    <SidebarGroupAction className="text-muted-foreground right-8" title={t('sidebar.projects')}>
-                        <PlusIcon />
-                    </SidebarGroupAction>
-                }
-            />
+            <SidebarGroupAction className="text-muted-foreground right-8" title={t('sidebar.projects')} onClick={() => setIsCreateOpen(true)}>
+                <PlusIcon />
+            </SidebarGroupAction>
         </>
     )
 }

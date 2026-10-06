@@ -11,13 +11,13 @@ export function SidebarProjects() {
     
     const { t } = useTranslation()
     const [isCreateOpen, setIsCreateOpen] = React.useState(false)
-    const { projects } = useProjects()
+    const { projects, handleCreateProject, sortByRecent, sortByOldest } = useProjects()
 
     return (
         <>
             <SidebarGroup className="group-data-[collapsible=icon]:hidden">
                 
-                <ProjectsHeader setIsCreateOpen={setIsCreateOpen} />
+                <ProjectsHeader setIsCreateOpen={setIsCreateOpen} sortByRecent={sortByRecent} sortByOldest={sortByOldest} />
 
                 <SidebarGroupContent>
                     {projects.length === 0 ? (
@@ -33,7 +33,7 @@ export function SidebarProjects() {
             
             </SidebarGroup>
 
-            <CreateProjectForm open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+            <CreateProjectForm open={isCreateOpen} onOpenChange={setIsCreateOpen} onCreateProject={handleCreateProject} />
 
         </>
     )
