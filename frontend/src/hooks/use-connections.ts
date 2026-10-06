@@ -143,6 +143,11 @@ export function useConnections(): UseConnectionsReturn {
 
             const res = await window.pywebview.api.connections.create(input)
             if (res.success) {
+                toast.add({
+                    type: "success",
+                    title: t("connections.success.title"),
+                    description: t("connections.success.create_success"),
+                })
                 await loadConnections()
             } else {
                 const errorMsg = res.error || t("connections.errors.create_failed")
@@ -171,6 +176,11 @@ export function useConnections(): UseConnectionsReturn {
 
             const res = await window.pywebview.api.connections.update(id, input)
             if (res.success) {
+                toast.add({
+                    type: "success",
+                    title: t("connections.success.title"),
+                    description: t("connections.success.update_success"),
+                })
                 await loadConnections()
             } else {
                 const errorMsg = res.error || t("connections.errors.update_failed")
@@ -199,6 +209,11 @@ export function useConnections(): UseConnectionsReturn {
 
             const res = await window.pywebview.api.connections.delete(id)
             if (res.success) {
+                toast.add({
+                    type: "success",
+                    title: t("connections.success.title"),
+                    description: t("connections.success.delete_success"),
+                })
                 await loadConnections()
             } else {
                 const errorMsg = res.error || t("connections.errors.delete_failed")
