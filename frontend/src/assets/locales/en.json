@@ -5,7 +5,9 @@
         "search_conversations": "Search Conversations",
         "my_connections": "My Connections",
         "my_agents": "My Agents",
-        "projects": "Projects"
+        "projects": "Projects",
+        "pinned": "Pinned",
+        "chats": "Chats"
     },
     "projects": {
         "no_projects": "No projects yet",
@@ -37,5 +39,40 @@
             "submit_button": "Delete",
             "cancel_button": "Cancel"
         }
+    },
+    "chats": {
+        "no_pinned": "No pinned chats",
+        "no_chats": "No chats yet",
+        "menu": {
+            "new_chat": "New Chat",
+            "rename_chat": "Rename chat",
+            "unpin_chat": "Unpin chat",
+            "delete_chat": "Delete chat",
+            "sort_by": "Sort by",
+            "sort_recent": "Most recent to oldest",
+            "sort_oldest": "Oldest to most recent"
+        },
+        "rename": {
+            "title": "Rename Chat",
+            "name_label": "Chat Name",
+            "placeholder": "Chat name...",
+            "submit_button": "Save Changes"
+        },
+        "unpin": {
+            "title": "Unpin chat?",
+            "description": "This action will remove the chat from the pinned section.",
+            "submit_button": "Unpin",
+            "cancel_button": "Cancel"
+        },
+        "delete": {
+            "title": "Delete chat?",
+            "description": "This action will delete the chat. It cannot be undone.",
+            "submit_button": "Delete",
+            "cancel_button": "Cancel"
+        }
+    },
+    "connections": {
+        "title": "My Connections",
+        "description": "Manage model connections and MCPs here."
     }
 }
