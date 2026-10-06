@@ -18,6 +18,7 @@ export interface UseConnectionsReturn {
     size: number
     pages: number
     loading: boolean
+    hasMore: boolean
     error: string | null
     search: string
     sortBy: string
@@ -28,7 +29,9 @@ export interface UseConnectionsReturn {
         size?: number
         sortBy?: string
         sortOrder?: "asc" | "desc"
+        append?: boolean
     }) => Promise<void>
+    loadMore: () => Promise<void>
     createConnection: (input: ConnectionCreateInput) => Promise<PyWebViewResponse<Connection>>
     updateConnection: (id: string, input: ConnectionUpdateInput) => Promise<PyWebViewResponse<Connection>>
     deleteConnection: (id: string) => Promise<PyWebViewResponse<boolean>>
@@ -60,6 +63,7 @@ export function useConnections(): UseConnectionsReturn {
             size?: number
             sortBy?: string
             sortOrder?: "asc" | "desc"
+            append?: boolean
         }) => {
             setLoading(true)
             setError(null)
@@ -69,6 +73,7 @@ export function useConnections(): UseConnectionsReturn {
             const currentSize = overrideParams?.size ?? size
             const currentSortBy = overrideParams?.sortBy ?? sortBy
             const currentSortOrder = overrideParams?.sortOrder ?? sortOrder
+            const isAppend = overrideParams?.append ?? false
 
             try {
                 if (window.pywebview?.api?.connections) {
@@ -82,7 +87,15 @@ export function useConnections(): UseConnectionsReturn {
 
                     if (res.success && res.data) {
                         const data: PaginatedConnectionsResponse = res.data
-                        setConnections(data.items)
+                        if (isAppend) {
+                            setConnections((prev) => {
+                                const existingIds = new Set(prev.map((item) => item.id))
+                                const newItems = data.items.filter((item) => !existingIds.has(item.id))
+                                return [...prev, ...newItems]
+                            })
+                        } else {
+                            setConnections(data.items)
+                        }
                         setTotal(data.total)
                         setPage(data.page)
                         setSize(data.size)
@@ -97,7 +110,7 @@ export function useConnections(): UseConnectionsReturn {
                         })
                     }
                 } else {
-                    setConnections([])
+                    if (!isAppend) setConnections([])
                     setTotal(0)
                     setPages(0)
                 }
@@ -117,17 +130,22 @@ export function useConnections(): UseConnectionsReturn {
     )
 
     React.useEffect(() => {
-        loadConnections()
+        loadConnections({ page: 1 })
 
         const handlePyWebViewReady = () => {
-            loadConnections()
+            loadConnections({ page: 1 })
         }
 
         window.addEventListener("pywebviewready", handlePyWebViewReady)
         return () => {
             window.removeEventListener("pywebviewready", handlePyWebViewReady)
         }
-    }, [loadConnections])
+    }, [])
+
+    const loadMore = React.useCallback(async () => {
+        if (loading || page >= pages) return
+        await loadConnections({ page: page + 1, append: true })
+    }, [loading, page, pages, loadConnections])
 
     const createConnection = React.useCallback(
         async (input: ConnectionCreateInput): Promise<PyWebViewResponse<Connection>> => {
@@ -283,11 +301,13 @@ export function useConnections(): UseConnectionsReturn {
         size,
         pages,
         loading,
+        hasMore: page < pages,
         error,
         search,
         sortBy,
         sortOrder,
         loadConnections,
+        loadMore,
         createConnection,
         updateConnection,
         deleteConnection,
