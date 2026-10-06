@@ -1,6 +1,6 @@
 import sqlite3
 from pathlib import Path
-from typing import Generator
+
 from crabby.core.config import settings
 from crabby.shared.logger import logger
 
@@ -32,9 +32,8 @@ def init_db() -> None:
     logger.info(f"Initializing database at: {db_path}")
 
     with get_connection() as conn:
-        
         cursor = conn.cursor()
-        
+
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS connections (
@@ -49,6 +48,23 @@ def init_db() -> None:
             );
             """
         )
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS mcp_servers (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL UNIQUE,
+                type TEXT NOT NULL DEFAULT 'http',
+                url TEXT NOT NULL,
+                headers TEXT NOT NULL DEFAULT '[]',
+                timeout REAL NOT NULL DEFAULT 30.0,
+                enabled INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            """
+        )
+
         conn.commit()
 
     logger.info("Database schema initialized successfully.")
