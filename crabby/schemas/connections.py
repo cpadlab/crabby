@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
 
 
@@ -10,7 +10,7 @@ class HeaderItem(BaseModel):
 
 class ConnectionBase(BaseModel):
     name: str = Field(...)
-    type: str = Field("ollama")
+    type: Literal["ollama"] = Field("ollama")
     host: str = Field(...)
     headers: List[HeaderItem] = Field(default_factory=list)
     timeout: float = Field(30.0)
