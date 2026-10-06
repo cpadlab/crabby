@@ -1,15 +1,15 @@
 import { useTranslation } from "react-i18next"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import type { Project } from "@/types/projects"
+import type { Chat } from "@/types/chats"
 
-export interface DeleteProjectDialogProps {
-    project: Project
+export interface DeleteChatDialogProps {
+    chat: Chat
     open?: boolean
     onOpenChange?: (open: boolean) => void
 }
 
-export function DeleteProjectDialog({ project, open, onOpenChange }: DeleteProjectDialogProps) {
+export function DeleteChatDialog({ chat, open, onOpenChange }: DeleteChatDialogProps) {
     
     const { t } = useTranslation()
 
@@ -24,13 +24,13 @@ export function DeleteProjectDialog({ project, open, onOpenChange }: DeleteProje
             <AlertDialogContent>
                 
                 <AlertDialogHeader>
-                    <AlertDialogTitle>{t("projects.delete.title")}</AlertDialogTitle>
-                    <AlertDialogDescription>{t("projects.delete.description", { name: project.name })}</AlertDialogDescription>
+                    <AlertDialogTitle>{t("chats.delete.title")}</AlertDialogTitle>
+                    <AlertDialogDescription>{t("chats.delete.description", { name: chat.name })}</AlertDialogDescription>
                 </AlertDialogHeader>
                 
                 <AlertDialogFooter>
-                    <AlertDialogCancel>{t("projects.delete.cancel_button")}</AlertDialogCancel>
-                    <AlertDialogAction variant="destructive" onClick={handleDelete}>{t("projects.delete.submit_button")}</AlertDialogAction>
+                    <AlertDialogCancel>{t("chats.delete.cancel_button")}</AlertDialogCancel>
+                    <AlertDialogAction variant="destructive" onClick={handleDelete}>{t("chats.delete.submit_button")}</AlertDialogAction>
                 </AlertDialogFooter>
 
             </AlertDialogContent>
@@ -38,4 +38,4 @@ export function DeleteProjectDialog({ project, open, onOpenChange }: DeleteProje
     )
 }
 
-export default DeleteProjectDialog
+export default DeleteChatDialog

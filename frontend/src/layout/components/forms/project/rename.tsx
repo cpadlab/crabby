@@ -68,3 +68,4 @@ export function RenameProjectForm({ project, open, onOpenChange, trigger }: Rena
 }
 
 export default RenameProjectForm
+
