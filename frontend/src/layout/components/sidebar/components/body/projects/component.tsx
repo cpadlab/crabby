@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from "@/components/ui/sidebar"
 import { CreateProjectForm } from "@/layout/components/forms/project/create"
@@ -8,21 +9,26 @@ import { ProjectItem } from "./item"
 
 export function SidebarProjects() {
     
+    const { t } = useTranslation()
     const [isCreateOpen, setIsCreateOpen] = React.useState(false)
     const { projects } = useProjects()
 
     return (
         <>
-            <SidebarGroup>
+            <SidebarGroup className="group-data-[collapsible=icon]:hidden">
                 
                 <ProjectsHeader setIsCreateOpen={setIsCreateOpen} />
 
                 <SidebarGroupContent>
-                    <SidebarMenu>
-                        {projects.map((project) => (
-                            <ProjectItem key={project.id} project={project} />
-                        ))}
-                    </SidebarMenu>
+                    {projects.length === 0 ? (
+                        <div className="px-3 text-xs text-muted-foreground">{t('projects.no_projects')}</div>
+                    ) : (
+                        <SidebarMenu>
+                            {projects.map((project) => (
+                                <ProjectItem key={project.id} project={project} />
+                            ))}
+                        </SidebarMenu>
+                    )}
                 </SidebarGroupContent>
             
             </SidebarGroup>

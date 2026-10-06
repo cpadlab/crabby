@@ -1,4 +1,5 @@
-import { ChevronRightIcon, FolderIcon, MessageSquareIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import { ChevronRightIcon } from "lucide-react"
 
 import { SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
@@ -10,8 +11,10 @@ export interface ProjectItemProps {
 
 export function ProjectItem({ project }: ProjectItemProps) {
     
+    const { t } = useTranslation()
+
     return (
-        <Collapsible className="group/collapsible">
+        <Collapsible defaultOpen className="group/collapsible">
             <SidebarMenuItem>
                 
                 <CollapsibleTrigger
@@ -25,13 +28,21 @@ export function ProjectItem({ project }: ProjectItemProps) {
                 
                 <CollapsibleContent>
                     <SidebarMenuSub className="w-full">
-                        {project.chats.map((chat) => (
-                            <SidebarMenuSubItem key={chat.id} className="w-full">
-                                <SidebarMenuSubButton className="w-full">
-                                    <span>{chat.name}</span>
-                                </SidebarMenuSubButton>
+                        {project.chats.length === 0 ? (
+                            <SidebarMenuSubItem className="w-full">
+                                <div className="px-2 text-xs text-muted-foreground">
+                                    {t('projects.no_chats')}
+                                </div>
                             </SidebarMenuSubItem>
-                        ))}
+                        ) : (
+                            project.chats.map((chat) => (
+                                <SidebarMenuSubItem key={chat.id} className="w-full">
+                                    <SidebarMenuSubButton className="w-full">
+                                        <span>{chat.name}</span>
+                                    </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                            ))
+                        )}
                     </SidebarMenuSub>
                 </CollapsibleContent>
 
