@@ -4,21 +4,6 @@
         "name": "Desarrollo Crabby Desktop",
         "modified": "2026-10-06T11:30:00Z",
         "chats": [
-            {
-                "id": "title8f2a1b90",
-                "name": "Arquitectura de la UI en React",
-                "modified": "2026-10-06T11:28:15Z"
-            },
-            {
-                "id": "title3c4d5e6f",
-                "name": "Integración de PyWebView & IPC",
-                "modified": "2026-10-05T18:45:20Z"
-            },
-            {
-                "id": "title9a8b7c6d",
-                "name": "Diseño de temas y Tailwind CSS",
-                "modified": "2026-10-04T14:12:00Z"
-            }
         ]
     },
     {
@@ -29,14 +14,15 @@
             {
                 "id": "title1a2b3c4d",
                 "name": "Resumen de documentación técnica",
-                "modified": "2026-10-05T09:10:45Z"
+                "modified": "2026-10-05T09:10:45Z",
+                "pinned": false
             },
             {
                 "id": "title5e6f7g8h",
                 "name": "Generación de scripts de automatización",
-                "modified": "2026-10-03T16:22:30Z"
+                "modified": "2026-10-03T16:22:30Z",
+                "pinned": true
             }
         ]
     }
 ]
-

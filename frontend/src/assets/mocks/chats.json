@@ -1,0 +1,27 @@
+[
+    {
+        "id": "chat01_pinned",
+        "name": "Plan de arquitectura Frontend",
+        "modified": "2026-10-06T10:00:00Z",
+        "pinned": true
+    },
+    {
+        "id": "chat02_pinned",
+        "name": "Configuración de Antigravity",
+        "modified": "2026-10-06T09:30:00Z",
+        "pinned": true
+    },
+    {
+        "id": "chat03_unpinned",
+        "name": "Diseño de la barra lateral",
+        "modified": "2026-10-05T14:20:00Z",
+        "pinned": false
+    },
+    {
+        "id": "chat04_unpinned",
+        "name": "Refactor de hooks y componentes",
+        "modified": "2026-10-04T18:45:00Z",
+        "pinned": false
+    }
+]
+
