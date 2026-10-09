@@ -4,6 +4,7 @@ import { Loader2Icon, PlusIcon, SearchIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useConnectionsContext } from "@/context/connections"
 import { ManageConnectionForm } from "../../forms/connections/manage"
 import { ConnectionCard } from "./card"
@@ -12,7 +13,7 @@ import { ConnectionsSkeleton } from "./skeleton"
 import { ConnectionsSummary } from "./summary"
 
 export const ConnectionsSection = () => {
-    const { connections, hasMore, loadMore, loading, search, setSearch } = useConnectionsContext()
+    const { connections, hasMore, loadMore, loading, search, setSearch, sortOrder, setSort } = useConnectionsContext()
     const [searchInput, setSearchInput] = React.useState(search)
     const [createOpen, setCreateOpen] = React.useState(false)
     const { t } = useTranslation()
@@ -38,21 +39,43 @@ export const ConnectionsSection = () => {
 
     return (
         <section className="flex flex-col gap-4">
+            
             <header>
-                <h2 className="text-xl font-semibold tracking-tight">{t("connections.section.title")}</h2>
+                <h2 className="text-xl font-semibold">{t("connections.section.title")}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{t("connections.section.subtitle")}</p>
             </header>
 
             <ConnectionsSummary />
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2">
+                
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    
                     <div className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
                         <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                         <Input aria-label={t("connections.section.search")} placeholder={t("connections.section.search")} value={searchInput} onChange={(event) => setSearchInput(event.target.value)} className="pl-9" />
                     </div>
-                    <ManageConnectionForm open={createOpen} onOpenChange={setCreateOpen} trigger={<Button size="sm" onClick={() => setCreateOpen(true)}><PlusIcon />{t("connections.create.title")}</Button>} />
                 </div>
+                
+                <div className="flex items-center gap-2">
+                    <Select value={sortOrder} onValueChange={(value) => { if (value === "asc" || value === "desc") setSort("created_at", value)}}>
+                        <SelectTrigger aria-label={t("connections.toolbar.sort_label")} className="w-auto">
+                            <SelectValue>
+                                {sortOrder === "desc"
+                                    ? t("connections.toolbar.newest_first")
+                                    : t("connections.toolbar.oldest_first")}
+                            </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent align="end">
+                            <SelectItem value="desc">{t("connections.toolbar.newest_first")}</SelectItem>
+                            <SelectItem value="asc">{t("connections.toolbar.oldest_first")}</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <ManageConnectionForm open={createOpen} onOpenChange={setCreateOpen} trigger={<Button onClick={() => setCreateOpen(true)}><PlusIcon />{t("connections.create.title")}</Button>} />
+
+                </div>
+
             </div>
 
             {loading && connections.length === 0 ? <ConnectionsSkeleton /> : connections.length ? (
@@ -63,6 +86,7 @@ export const ConnectionsSection = () => {
             ) : searchInput ? (
                 <div className="rounded-xl border border-dashed py-12 text-center text-sm text-muted-foreground">{t("connections.section.no_search_results", { search: searchInput })}</div>
             ) : <ConnectionsEmptyState onCreateClick={() => setCreateOpen(true)} />}
+
         </section>
     )
 }
