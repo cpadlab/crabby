@@ -5,7 +5,7 @@ export type MCPSortOrder = "asc" | "desc"
 
 export interface MCPHeader {
     key: string
-    value: ""
+    value: string
     configured: boolean
 }
 

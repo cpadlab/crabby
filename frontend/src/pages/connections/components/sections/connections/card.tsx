@@ -112,8 +112,8 @@ export function ConnectionCard({ connection }: ConnectionCardProps) {
                                     <div className={`w-2 h-2 rounded-full shrink-0 ${isConnected === true ? "bg-emerald-500" : isConnected === false ? "bg-destructive" : "bg-amber-500"}`} />
                                     <span className="truncate max-w-[160px] sm:max-w-xs">{connection.host}</span>
                                 </Badge>
-                                <span className="text-muted-foreground">• {t("connections.card.timeout", { timeout: connection.timeout })}</span>
-                                <span className="text-muted-foreground">• {t(headerCount === 1 ? "connections.card.headers_count_one" : "connections.card.headers_count_other", { count: headerCount })}</span>
+                                <span className="md:inline hidden text-muted-foreground">• {t("connections.card.timeout", { timeout: connection.timeout })}</span>
+                                <span className="md:inline hidden text-muted-foreground">• {t(headerCount === 1 ? "connections.card.headers_count_one" : "connections.card.headers_count_other", { count: headerCount })}</span>
                             </div>
                         </div>
                     </div>

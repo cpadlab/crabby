@@ -3,7 +3,25 @@ import { useTranslation } from "react-i18next"
 
 import { toast } from "@/components/ui/toast"
 import type { HeaderItem, PyWebViewResponse } from "@/types/connections"
-import type { MCPServer, MCPServerCreateInput, MCPServerUpdateInput, MCPToolDefinition, OllamaTool, PaginatedMCPServersResponse, ToolExecutionResult } from "@/types/mcp"
+import type {
+    MCPConnectionCheckResponse,
+    MCPServer,
+    MCPServerCreateInput,
+    MCPServerType,
+    MCPServerUpdateInput,
+    MCPToolDefinition,
+    OllamaTool,
+    ToolExecutionResult,
+} from "@/types/mcp"
+
+export interface MCPListOptions {
+    search?: string
+    page?: number
+    size?: number
+    sortBy?: string
+    sortOrder?: "asc" | "desc"
+    append?: boolean
+}
 
 export interface UseMCPReturn {
     mcpServers: MCPServer[]
@@ -17,20 +35,25 @@ export interface UseMCPReturn {
     search: string
     sortBy: string
     sortOrder: "asc" | "desc"
-    loadMCPServers: (overrideParams?: {
-        search?: string
-        page?: number
-        size?: number
-        sortBy?: string
-        sortOrder?: "asc" | "desc"
-        append?: boolean
-    }) => Promise<void>
+    loadMCPServers: (overrideParams?: MCPListOptions) => Promise<void>
     loadMore: () => Promise<void>
     createMCPServer: (input: MCPServerCreateInput) => Promise<PyWebViewResponse<MCPServer>>
     updateMCPServer: (id: string, input: MCPServerUpdateInput) => Promise<PyWebViewResponse<MCPServer>>
     deleteMCPServer: (id: string) => Promise<PyWebViewResponse<boolean>>
     checkMCPServer: (id: string) => Promise<boolean>
-    checkMCPServerByUrl: (url: string, headers?: HeaderItem[], timeout?: number) => Promise<boolean>
+    checkMCPServerResult: (id: string) => Promise<MCPConnectionCheckResponse>
+    checkMCPServerByUrl: (
+        url: string,
+        headers?: HeaderItem[],
+        timeout?: number,
+        transportType?: MCPServerType,
+    ) => Promise<boolean>
+    checkMCPServerByUrlResult: (
+        url: string,
+        headers?: HeaderItem[],
+        timeout?: number,
+        transportType?: MCPServerType,
+    ) => Promise<MCPConnectionCheckResponse>
     discoverTools: (id: string) => Promise<MCPToolDefinition[]>
     getOllamaTools: () => Promise<OllamaTool[]>
     executeToolCall: (toolName: string, args: Record<string, unknown>) => Promise<PyWebViewResponse<ToolExecutionResult>>
@@ -40,11 +63,10 @@ export interface UseMCPReturn {
 }
 
 export function useMCP(): UseMCPReturn {
-    
     const { t } = useTranslation()
     const [mcpServers, setMcpServers] = React.useState<MCPServer[]>([])
     const [total, setTotal] = React.useState(0)
-    const [page, setPage] = React.useState(1)
+    const [page, setPageState] = React.useState(1)
     const [size, setSize] = React.useState(10)
     const [pages, setPages] = React.useState(0)
     const [loading, setLoading] = React.useState(false)
@@ -52,262 +74,250 @@ export function useMCP(): UseMCPReturn {
     const [search, setSearchState] = React.useState("")
     const [sortBy, setSortByState] = React.useState("created_at")
     const [sortOrder, setSortOrderState] = React.useState<"asc" | "desc">("desc")
+    const requestSequence = React.useRef(0)
+    const loadMCPServersRef = React.useRef<(options?: MCPListOptions) => Promise<void>>(async () => undefined)
 
-    const loadMCPServers = React.useCallback(
-        async (overrideParams?: {
-            search?: string
-            page?: number
-            size?: number
-            sortBy?: string
-            sortOrder?: "asc" | "desc"
-            append?: boolean
-        }) => {
-            setLoading(true)
-            setError(null)
+    const loadMCPServers = React.useCallback(async (overrideParams?: MCPListOptions) => {
+        const requestId = ++requestSequence.current
+        const currentSearch = overrideParams?.search ?? search
+        const currentPage = Math.max(1, overrideParams?.page ?? page)
+        const currentSize = Math.max(1, Math.min(100, overrideParams?.size ?? size))
+        const currentSortBy = overrideParams?.sortBy ?? sortBy
+        const currentSortOrder = overrideParams?.sortOrder ?? sortOrder
+        const append = overrideParams?.append ?? false
+        const api = window.pywebview?.api?.mcp
 
-            const currentSearch = overrideParams?.search ?? search
-            const currentPage = overrideParams?.page ?? page
-            const currentSize = overrideParams?.size ?? size
-            const currentSortBy = overrideParams?.sortBy ?? sortBy
-            const currentSortOrder = overrideParams?.sortOrder ?? sortOrder
-            const isAppend = overrideParams?.append ?? false
-
-            try {
-                if (window.pywebview?.api?.mcp) {
-                    const res = await window.pywebview.api.mcp.list_paginated(
-                        currentSearch,
-                        currentPage,
-                        currentSize,
-                        currentSortBy,
-                        currentSortOrder
-                    )
-
-                    if (res.success && res.data) {
-                        const data: PaginatedMCPServersResponse = res.data
-                        if (isAppend) {
-                            setMcpServers((prev) => {
-                                const existingIds = new Set(prev.map((item) => item.id))
-                                const newItems = data.items.filter((item) => !existingIds.has(item.id))
-                                return [...prev, ...newItems]
-                            })
-                        } else {
-                            setMcpServers(data.items)
-                        }
-                        setTotal(data.total)
-                        setPage(data.page)
-                        setSize(data.size)
-                        setPages(data.pages)
-                    } else {
-                        const errorMsg = res.error || t("mcp.errors.load_failed", "Error al cargar servidores MCP")
-                        setError(errorMsg)
-                        toast.add({
-                            type: "error",
-                            title: t("mcp.errors.title", "Error"),
-                            description: errorMsg,
-                        })
-                    }
-                } else {
-                    if (!isAppend) setMcpServers([])
-                    setTotal(0)
-                    setPages(0)
-                }
-            } catch (err) {
-                const errorMsg = err instanceof Error ? err.message : t("mcp.errors.unexpected_error", "Error inesperado")
-                setError(errorMsg)
-                toast.add({
-                    type: "error",
-                    title: t("mcp.errors.title", "Error"),
-                    description: errorMsg,
-                })
-            } finally {
-                setLoading(false)
+        if (!api) {
+            if (!append) {
+                setMcpServers([])
+                setTotal(0)
+                setPageState(1)
+                setPages(0)
             }
-        },
-        [search, page, size, sortBy, sortOrder, t]
-    )
+            setLoading(false)
+            return
+        }
+
+        setLoading(true)
+        setError(null)
+        try {
+            const response = await api.list_paginated(
+                currentSearch,
+                currentPage,
+                currentSize,
+                currentSortBy,
+                currentSortOrder,
+            )
+            if (requestId !== requestSequence.current) return
+
+            if (!response.success || !response.data) {
+                throw new Error(response.error || t("mcp.errors.load_failed", "Error al cargar servidores MCP"))
+            }
+
+            const data = response.data
+            if (append) {
+                setMcpServers((previous) => {
+                    const merged = new Map(previous.map((server) => [server.id, server]))
+                    for (const server of data.items) merged.set(server.id, server)
+                    return [...merged.values()]
+                })
+            } else {
+                setMcpServers(data.items)
+            }
+            setTotal(data.total)
+            setPageState(data.page)
+            setSize(data.size)
+            setPages(data.pages)
+        } catch (cause) {
+            if (requestId !== requestSequence.current) return
+            const message = cause instanceof Error
+                ? cause.message
+                : t("mcp.errors.unexpected_error", "Error inesperado")
+            setError(message)
+            toast.add({
+                type: "error",
+                title: t("mcp.errors.title", "Error"),
+                description: message,
+            })
+        } finally {
+            if (requestId === requestSequence.current) setLoading(false)
+        }
+    }, [page, search, size, sortBy, sortOrder, t])
 
     React.useEffect(() => {
-        loadMCPServers({ page: 1 })
+        loadMCPServersRef.current = loadMCPServers
+    }, [loadMCPServers])
 
-        const handlePyWebViewReady = () => {
-            loadMCPServers({ page: 1 })
-        }
-
-        window.addEventListener("pywebviewready", handlePyWebViewReady)
+    React.useEffect(() => {
+        void loadMCPServersRef.current({ page: 1 })
+        const onReady = () => void loadMCPServersRef.current({ page: 1 })
+        window.addEventListener("pywebviewready", onReady)
         return () => {
-            window.removeEventListener("pywebviewready", handlePyWebViewReady)
+            requestSequence.current += 1
+            window.removeEventListener("pywebviewready", onReady)
         }
-    }, [])
+    }, []) // Load once on mount; PyWebView may become available afterward.
 
     const loadMore = React.useCallback(async () => {
         if (loading || page >= pages) return
         await loadMCPServers({ page: page + 1, append: true })
     }, [loading, page, pages, loadMCPServers])
 
-    const createMCPServer = React.useCallback(
-        async (input: MCPServerCreateInput): Promise<PyWebViewResponse<MCPServer>> => {
-            if (!window.pywebview?.api?.mcp) {
-                const errorMsg = t("mcp.errors.pywebview_not_available", "API backend no disponible")
-                toast.add({
-                    type: "error",
-                    title: t("mcp.errors.title", "Error"),
-                    description: errorMsg,
-                })
-                return { success: false, error: errorMsg }
-            }
+    const mutationError = React.useCallback((key: string) => t(key, "No se pudo completar la operación."), [t])
 
-            const res = await window.pywebview.api.mcp.create(input)
-            if (res.success) {
-                toast.add({
-                    type: "success",
-                    title: t("mcp.success.title", "Éxito"),
-                    description: t("mcp.success.create_success", "Servidor MCP creado correctamente"),
-                })
-                await loadMCPServers()
-            } else {
-                const errorMsg = res.error || t("mcp.errors.create_failed", "Error al crear servidor MCP")
-                toast.add({
-                    type: "error",
-                    title: t("mcp.errors.title", "Error"),
-                    description: errorMsg,
-                })
-            }
-            return res
-        },
-        [loadMCPServers, t]
-    )
+    const createMCPServer = React.useCallback(async (input: MCPServerCreateInput) => {
+        const api = window.pywebview?.api?.mcp
+        if (!api) return { success: false, error: t("mcp.errors.pywebview_not_available", "API backend no disponible") }
+        let response: PyWebViewResponse<MCPServer>
+        try {
+            response = await api.create(input)
+        } catch {
+            response = { success: false, error: mutationError("mcp.errors.unexpected_error") }
+        }
+        if (response.success) {
+            toast.add({ type: "success", title: t("mcp.success.title", "Éxito"), description: t("mcp.success.create_success", "Servidor MCP creado correctamente") })
+            await loadMCPServers({ page: 1 })
+        } else {
+            toast.add({ type: "error", title: t("mcp.errors.title", "Error"), description: response.error || mutationError("mcp.errors.create_failed") })
+        }
+        return response
+    }, [loadMCPServers, mutationError, t])
 
-    const updateMCPServer = React.useCallback(
-        async (id: string, input: MCPServerUpdateInput): Promise<PyWebViewResponse<MCPServer>> => {
-            if (!window.pywebview?.api?.mcp) {
-                const errorMsg = t("mcp.errors.pywebview_not_available", "API backend no disponible")
-                toast.add({
-                    type: "error",
-                    title: t("mcp.errors.title", "Error"),
-                    description: errorMsg,
-                })
-                return { success: false, error: errorMsg }
-            }
+    const updateMCPServer = React.useCallback(async (id: string, input: MCPServerUpdateInput) => {
+        const api = window.pywebview?.api?.mcp
+        if (!api) return { success: false, error: t("mcp.errors.pywebview_not_available", "API backend no disponible") }
+        let response: PyWebViewResponse<MCPServer>
+        try {
+            response = await api.update(id, input)
+        } catch {
+            response = { success: false, error: mutationError("mcp.errors.unexpected_error") }
+        }
+        if (response.success) {
+            toast.add({ type: "success", title: t("mcp.success.title", "Éxito"), description: t("mcp.success.update_success", "Servidor MCP actualizado correctamente") })
+            await loadMCPServers({ page: 1 })
+        } else {
+            toast.add({ type: "error", title: t("mcp.errors.title", "Error"), description: response.error || mutationError("mcp.errors.update_failed") })
+        }
+        return response
+    }, [loadMCPServers, mutationError, t])
 
-            const res = await window.pywebview.api.mcp.update(id, input)
-            if (res.success) {
-                toast.add({
-                    type: "success",
-                    title: t("mcp.success.title", "Éxito"),
-                    description: t("mcp.success.update_success", "Servidor MCP actualizado correctamente"),
-                })
-                await loadMCPServers()
-            } else {
-                const errorMsg = res.error || t("mcp.errors.update_failed", "Error al actualizar servidor MCP")
-                toast.add({
-                    type: "error",
-                    title: t("mcp.errors.title", "Error"),
-                    description: errorMsg,
-                })
-            }
-            return res
-        },
-        [loadMCPServers, t]
-    )
+    const deleteMCPServer = React.useCallback(async (id: string) => {
+        const api = window.pywebview?.api?.mcp
+        if (!api) return { success: false, error: t("mcp.errors.pywebview_not_available", "API backend no disponible") }
+        let response: PyWebViewResponse<boolean>
+        try {
+            response = await api.delete(id)
+        } catch {
+            response = { success: false, error: mutationError("mcp.errors.unexpected_error") }
+        }
+        if (response.success) {
+            toast.add({ type: "success", title: t("mcp.success.title", "Éxito"), description: t("mcp.success.delete_success", "Servidor MCP eliminado correctamente") })
+            await loadMCPServers({ page: 1 })
+        } else {
+            toast.add({ type: "error", title: t("mcp.errors.title", "Error"), description: response.error || mutationError("mcp.errors.delete_failed") })
+        }
+        return response
+    }, [loadMCPServers, mutationError, t])
 
-    const deleteMCPServer = React.useCallback(
-        async (id: string): Promise<PyWebViewResponse<boolean>> => {
-            if (!window.pywebview?.api?.mcp) {
-                const errorMsg = t("mcp.errors.pywebview_not_available", "API backend no disponible")
-                toast.add({
-                    type: "error",
-                    title: t("mcp.errors.title", "Error"),
-                    description: errorMsg,
-                })
-                return { success: false, error: errorMsg }
-            }
+    const checkMCPServerResult = React.useCallback(async (id: string): Promise<MCPConnectionCheckResponse> => {
+        const api = window.pywebview?.api?.mcp
+        if (!api) return { success: false, connected: false, error: t("mcp.errors.pywebview_not_available", "API backend no disponible") }
+        try {
+            return await api.check(id)
+        } catch {
+            return { success: false, connected: false, error: mutationError("mcp.errors.unexpected_error") }
+        }
+    }, [mutationError, t])
 
-            const res = await window.pywebview.api.mcp.delete(id)
-            if (res.success) {
-                toast.add({
-                    type: "success",
-                    title: t("mcp.success.title", "Éxito"),
-                    description: t("mcp.success.delete_success", "Servidor MCP eliminado correctamente"),
-                })
-                await loadMCPServers()
-            } else {
-                const errorMsg = res.error || t("mcp.errors.delete_failed", "Error al eliminar servidor MCP")
-                toast.add({
-                    type: "error",
-                    title: t("mcp.errors.title", "Error"),
-                    description: errorMsg,
-                })
-            }
-            return res
-        },
-        [loadMCPServers, t]
-    )
+    const checkMCPServer = React.useCallback(async (id: string) => {
+        const result = await checkMCPServerResult(id)
+        return Boolean(result.success && result.connected)
+    }, [checkMCPServerResult])
 
-    const checkMCPServer = React.useCallback(async (id: string): Promise<boolean> => {
-        if (!window.pywebview?.api?.mcp) return false
-        const res = await window.pywebview.api.mcp.check(id)
-        return Boolean(res.success && res.connected)
-    }, [])
+    const checkMCPServerByUrlResult = React.useCallback(async (
+        url: string,
+        headers: HeaderItem[] = [],
+        timeout = 5,
+        transportType: MCPServerType = "http",
+    ): Promise<MCPConnectionCheckResponse> => {
+        const api = window.pywebview?.api?.mcp
+        if (!api) {
+            return { success: false, connected: false, error: t("mcp.errors.pywebview_not_available", "API backend no disponible") }
+        }
+        try {
+            // The 4th argument selects HTTP/SSE; older bridge declarations only describe the first 3.
+            const checkByUrl = api.check_by_url as (
+                url: string,
+                headers?: HeaderItem[],
+                timeout?: number,
+                transportType?: MCPServerType,
+            ) => Promise<MCPConnectionCheckResponse>
+            return await checkByUrl.call(api, url, headers, timeout, transportType)
+        } catch {
+            return { success: false, connected: false, error: mutationError("mcp.errors.unexpected_error") }
+        }
+    }, [mutationError, t])
 
-    const checkMCPServerByUrl = React.useCallback(
-        async (url: string, headers?: HeaderItem[], timeout?: number): Promise<boolean> => {
-            if (!window.pywebview?.api?.mcp) return false
-            const res = await window.pywebview.api.mcp.check_by_url(url, headers, timeout)
-            return Boolean(res.success && res.connected)
-        },
-        []
-    )
+    const checkMCPServerByUrl = React.useCallback(async (
+        url: string,
+        headers?: HeaderItem[],
+        timeout?: number,
+        transportType?: MCPServerType,
+    ) => {
+        const result = await checkMCPServerByUrlResult(url, headers, timeout, transportType)
+        return Boolean(result.success && result.connected)
+    }, [checkMCPServerByUrlResult])
 
     const discoverTools = React.useCallback(async (id: string): Promise<MCPToolDefinition[]> => {
-        if (!window.pywebview?.api?.mcp) return []
-        const res = await window.pywebview.api.mcp.discover_tools(id)
-        return res.success && res.data ? res.data : []
-    }, [])
+        const api = window.pywebview?.api?.mcp
+        if (!api) throw new Error(t("mcp.errors.pywebview_not_available", "API backend no disponible"))
+        const response = await api.discover_tools(id)
+        if (!response.success) throw new Error(response.error || mutationError("mcp.errors.discover_failed"))
+        return response.data || []
+    }, [mutationError, t])
 
     const getOllamaTools = React.useCallback(async (): Promise<OllamaTool[]> => {
-        if (!window.pywebview?.api?.mcp) return []
-        const res = await window.pywebview.api.mcp.get_ollama_tools()
-        return res.success && res.data ? res.data : []
-    }, [])
+        const api = window.pywebview?.api?.mcp
+        if (!api) throw new Error(t("mcp.errors.pywebview_not_available", "API backend no disponible"))
+        const response = await api.get_ollama_tools()
+        if (!response.success) throw new Error(response.error || mutationError("mcp.errors.tools_failed"))
+        return response.data || []
+    }, [mutationError, t])
 
-    const executeToolCall = React.useCallback(
-        async (toolName: string, args: Record<string, unknown>): Promise<PyWebViewResponse<ToolExecutionResult>> => {
-            if (!window.pywebview?.api?.mcp) {
-                return { success: false, error: "PyWebView API not available" }
-            }
-            return await window.pywebview.api.mcp.execute_tool_call(toolName, args)
-        },
-        []
-    )
+    const executeToolCall = React.useCallback(async (
+        toolName: string,
+        args: Record<string, unknown>,
+    ): Promise<PyWebViewResponse<ToolExecutionResult>> => {
+        const api = window.pywebview?.api?.mcp
+        if (!api) return { success: false, error: t("mcp.errors.pywebview_not_available", "API backend no disponible") }
+        try {
+            return await api.execute_tool_call(toolName, args)
+        } catch {
+            return { success: false, error: mutationError("mcp.errors.unexpected_error") }
+        }
+    }, [mutationError, t])
 
-    const setSearch = React.useCallback(
-        (term: string) => {
-            setSearchState(term)
-            setPage(1)
-            loadMCPServers({ search: term, page: 1 })
-        },
-        [loadMCPServers]
-    )
+    const setSearch = React.useCallback((term: string) => {
+        setSearchState(term)
+        setPageState(1)
+        void loadMCPServers({ search: term, page: 1 })
+    }, [loadMCPServers])
 
-    const handleSetPage = React.useCallback(
-        (newPage: number) => {
-            setPage(newPage)
-            loadMCPServers({ page: newPage })
-        },
-        [loadMCPServers]
-    )
+    const setPage = React.useCallback((newPage: number) => {
+        const nextPage = Math.max(1, Math.min(newPage, Math.max(pages, 1)))
+        setPageState(nextPage)
+        void loadMCPServers({ page: nextPage })
+    }, [loadMCPServers, pages])
 
-    const setSort = React.useCallback(
-        (newSortBy: string, newSortOrder?: "asc" | "desc") => {
-            const order = newSortOrder ?? (sortBy === newSortBy && sortOrder === "desc" ? "asc" : "desc")
-            setSortByState(newSortBy)
-            setSortOrderState(order)
-            loadMCPServers({ sortBy: newSortBy, sortOrder: order })
-        },
-        [sortBy, sortOrder, loadMCPServers]
-    )
+    const setSort = React.useCallback((newSortBy: string, newSortOrder?: "asc" | "desc") => {
+        const nextOrder = newSortOrder ?? (sortBy === newSortBy && sortOrder === "desc" ? "asc" : "desc")
+        setSortByState(newSortBy)
+        setSortOrderState(nextOrder)
+        setPageState(1)
+        void loadMCPServers({ page: 1, sortBy: newSortBy, sortOrder: nextOrder })
+    }, [loadMCPServers, sortBy, sortOrder])
 
-    return {
+    return React.useMemo(() => ({
         mcpServers,
         total,
         page,
@@ -325,15 +335,21 @@ export function useMCP(): UseMCPReturn {
         updateMCPServer,
         deleteMCPServer,
         checkMCPServer,
+        checkMCPServerResult,
         checkMCPServerByUrl,
+        checkMCPServerByUrlResult,
         discoverTools,
         getOllamaTools,
         executeToolCall,
         setSearch,
-        setPage: handleSetPage,
+        setPage,
         setSort,
-    }
+    }), [
+        mcpServers, total, page, size, pages, loading, error, search, sortBy, sortOrder,
+        loadMCPServers, loadMore, createMCPServer, updateMCPServer, deleteMCPServer,
+        checkMCPServer, checkMCPServerResult, checkMCPServerByUrl, checkMCPServerByUrlResult,
+        discoverTools, getOllamaTools, executeToolCall, setSearch, setPage, setSort,
+    ])
 }
 
 export default useMCP
-
