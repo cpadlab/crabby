@@ -7,7 +7,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class HeaderItem(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
     key: str = Field(..., min_length=1, max_length=256)
-    value: str = Field(..., min_length=1, max_length=8192)
+    value: str = Field("", max_length=8192)
+    configured: bool = Field(False, exclude=True)
 
     @field_validator("key")
     @classmethod
@@ -47,6 +48,8 @@ class ConnectionBase(BaseModel):
         keys = [header.key.casefold() for header in value]
         if len(keys) != len(set(keys)):
             raise ValueError("Header names must be unique.")
+        if any(not header.value for header in value):
+            raise ValueError("Header values are required when creating a connection.")
         return value
 
 
@@ -55,14 +58,40 @@ class ConnectionCreate(ConnectionBase):
 
 
 class ConnectionUpdate(BaseModel):
-    name: Optional[str] = None
-    host: Optional[str] = None
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    host: Optional[str] = Field(None, max_length=2048)
     headers: Optional[List[HeaderItem]] = None
-    timeout: Optional[float] = None
+    timeout: Optional[float] = Field(None, ge=0.5, le=300)
+
+    @field_validator("name")
+    @classmethod
+    def validate_optional_name(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and not value.strip():
+            raise ValueError("Connection name cannot be empty.")
+        return value.strip() if value is not None else None
+
+    @field_validator("headers")
+    @classmethod
+    def validate_unique_headers(cls, value: Optional[List[HeaderItem]]) -> Optional[List[HeaderItem]]:
+        if value is not None:
+            keys = [header.key.casefold() for header in value]
+            if len(keys) != len(set(keys)):
+                raise ValueError("Header names must be unique.")
+        return value
 
 
-class ConnectionResponse(ConnectionBase):
+class ConnectionHeaderResponse(BaseModel):
+    key: str
+    configured: bool = True
+
+
+class ConnectionResponse(BaseModel):
     id: str
+    name: str
+    type: Literal["ollama"]
+    host: str
+    headers: List[ConnectionHeaderResponse] = Field(default_factory=list)
+    timeout: float
     created_at: str
     updated_at: str
     models: List[str] = Field(default_factory=list)
