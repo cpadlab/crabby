@@ -56,6 +56,13 @@ export function ConnectionCard({ connection }: ConnectionCardProps) {
                     description: t("connections.card.connection_failed"),
                 })
             }
+        } catch {
+            setIsConnected(false)
+            toast.add({
+                type: "error",
+                title: connection.name,
+                description: t("connections.errors.unexpected_error"),
+            })
         } finally {
             setIsChecking(false)
         }
@@ -69,7 +76,13 @@ export function ConnectionCard({ connection }: ConnectionCardProps) {
             toast.add({
                 type: "success",
                 title: connection.name,
-                description: `${fetched.length} modelos encontrados`,
+                description: t("connections.card.models_synced", { count: fetched.length }),
+            })
+        } catch {
+            toast.add({
+                type: "error",
+                title: connection.name,
+                description: t("connections.errors.unexpected_error"),
             })
         } finally {
             setIsSyncing(false)
@@ -84,7 +97,7 @@ export function ConnectionCard({ connection }: ConnectionCardProps) {
 
     return (
         <>
-            <div className="bg-card overflow-hidden border rounded-4xl transition-colors hover:border-border/80">
+            <div className="bg-card overflow-hidden border rounded-xl transition-colors hover:border-border/80">
                 
                 <div className="flex p-4 items-start sm:items-center justify-between gap-3 sm:gap-4">
                     
