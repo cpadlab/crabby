@@ -43,7 +43,7 @@ export function ManageConnectionForm({
             type: connection?.type || "ollama",
             host: connection?.host || "http://localhost:11434",
             timeout: connection?.timeout ?? 30,
-            headers: connection?.headers || [],
+            headers: connection?.headers.map((header) => ({ key: header.key, value: "", configured: header.configured })) || [],
         }),
         [connection]
     )
@@ -109,13 +109,14 @@ export function ManageConnectionForm({
                     </DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4 max-w-sm w-sm">
+                    
                     <p className="text-sm text-muted-foreground">
                         {isEdit ? t("connections.update.description") : t("connections.create.description")}
                     </p>
 
-                    <ScrollArea className="max-h-[60vh] pr-3">
-                        <div className="flex flex-col gap-4 p-1">
+                    <ScrollArea className="max-h-[60vh] pr-2">
+                        <div className="flex flex-col gap-4">
                             
                             <Controller name="name" control={form.control}
                                 render={({ field, fieldState }) => (
@@ -187,17 +188,22 @@ export function ManageConnectionForm({
                                 )}
                             />
 
-                            <div className="flex flex-col gap-2">
+                            <div className="flex truncate max-w-full flex-col gap-2">
                                 
-                                <div className="flex items-center gap-4 justify-between">
-                                    <Label className="truncate">{t("connections.form.headers_label")}</Label>
-                                    <Button type="button" variant="outline" size="xs" disabled={isSubmitting} onClick={() => append({ key: "", value: "" })}> <PlusIcon />
-                                        {t("connections.form.add_header_button")}
-                                    </Button>
+                                <div>
+                                    <div className="flex items-center gap-2 justify-between">
+                                        <div className="min-w-0 truncate">
+                                            <Label className="truncate">{t("connections.form.headers_label")}</Label>
+                                        </div>
+                                        <Button type="button" variant="outline" size="xs" disabled={isSubmitting} onClick={() => append({ key: "", value: "" })}> <PlusIcon />
+                                            {t("connections.form.add_header_button")}
+                                        </Button>
+                                    </div>
+                                    <p className="mt-1 text-wrap text-xs text-muted-foreground">{t("connections.form.headers_description")}</p>
                                 </div>
 
                                 {fields.map((headerField, index) => (
-                                    <div key={headerField.id} className="flex items-stretch gap-2">
+                                    <div key={headerField.id} className="flex bg-sidebar p-2 rounded-3xl items-stretch gap-2">
                                         
                                         <Controller name={`headers.${index}.key`} control={form.control}
                                             render={({ field, fieldState }) => (
@@ -222,7 +228,7 @@ export function ManageConnectionForm({
                                                         <InputGroupAddon align="inline-start">
                                                             <TagIcon />
                                                         </InputGroupAddon>
-                                                        <InputGroupInput {...field} disabled={isSubmitting} aria-invalid={fieldState.invalid} placeholder={t("connections.form.header_value_placeholder")} />
+                                                        <InputGroupInput {...field} type="password" autoComplete="new-password" disabled={isSubmitting} aria-invalid={fieldState.invalid} placeholder={headerField.configured ? t("connections.form.header_keep_placeholder") : t("connections.form.header_value_placeholder")} />
                                                     </InputGroup>
                                                     {fieldState.invalid && (
                                                         <span className="text-xs text-destructive">{fieldState.error?.message}</span>
@@ -232,7 +238,7 @@ export function ManageConnectionForm({
                                         />
 
                                         <div className="flex items-center">
-                                            <Button type="button" variant="ghost" size="icon-sm" disabled={isSubmitting} onClick={() => remove(index)} className="text-muted-foreground hover:text-destructive">
+                                            <Button type="button" variant="destructive" size="icon-sm" disabled={isSubmitting} onClick={() => remove(index)}>
                                                 <Trash2Icon className="w-4 h-4" />
                                             </Button>
                                         </div>
