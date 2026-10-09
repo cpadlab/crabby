@@ -1,14 +1,16 @@
 import json
-from typing import Iterable
+from typing import Iterable, TypeVar
 
 import keyring
 from cryptography.fernet import Fernet, InvalidToken
+from pydantic import BaseModel
 
 from crabby.schemas.connections import HeaderItem
 
 _SERVICE = "Crabby"
 _ACCOUNT = "connection-headers-key-v1"
 _PREFIX = "enc:v1:"
+HeaderModel = TypeVar("HeaderModel", bound=BaseModel)
 
 
 def _cipher() -> Fernet:
@@ -30,7 +32,7 @@ def _cipher() -> Fernet:
         raise RuntimeError("The saved credential encryption key is invalid.") from exc
 
 
-def encode_headers(headers: Iterable[HeaderItem]) -> str:
+def encode_headers(headers: Iterable[BaseModel]) -> str:
     values = [header.model_dump() for header in headers]
     if not values:
         return "[]"
@@ -38,7 +40,10 @@ def encode_headers(headers: Iterable[HeaderItem]) -> str:
     return _PREFIX + _cipher().encrypt(payload.encode("utf-8")).decode("ascii")
 
 
-def decode_headers(value: str) -> tuple[list[HeaderItem], str | None]:
+def decode_headers(
+    value: str,
+    header_model: type[HeaderModel] = HeaderItem,
+) -> tuple[list[HeaderModel], str | None]:
     """Return decoded headers and an encrypted replacement for legacy plaintext."""
     if value.startswith(_PREFIX):
         try:
@@ -46,10 +51,10 @@ def decode_headers(value: str) -> tuple[list[HeaderItem], str | None]:
             raw = json.loads(payload.decode("utf-8"))
         except (InvalidToken, UnicodeError, json.JSONDecodeError, ValueError) as exc:
             raise RuntimeError("Could not decrypt saved connection credentials. The OS credential store may have changed.") from exc
-        return [HeaderItem(**item) for item in raw], None
+        return [header_model(**item) for item in raw], None
 
     raw = json.loads(value)
-    headers = [HeaderItem(**item) for item in raw]
+    headers = [header_model(**item) for item in raw]
     if not headers:
         return [], None
     return headers, encode_headers(headers)
