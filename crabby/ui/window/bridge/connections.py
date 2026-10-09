@@ -22,6 +22,8 @@ class ConnectionsBridge:
             return "; ".join(error["msg"] for error in details) or "Connection details are invalid."
         if isinstance(exc, (ValueError, KeyError)):
             return str(exc)
+        if isinstance(exc, RuntimeError):
+            return "The secure credential store is unavailable. Check your operating-system keychain settings."
         return "The connection operation failed. Check the server and credentials, then try again."
 
 

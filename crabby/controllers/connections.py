@@ -12,6 +12,7 @@ from crabby.core.database import get_connection
 from crabby.core.secrets import decode_headers, encode_headers
 from crabby.schemas.connections import (
     ConnectionCreate,
+    ConnectionHeaderResponse,
     ConnectionResponse,
     ConnectionUpdate,
     HeaderItem,
@@ -29,6 +30,10 @@ class ConnectionController:
     @staticmethod
     def _now_iso() -> str:
         return datetime.now(timezone.utc).isoformat()
+
+    @staticmethod
+    def _public_headers(headers: List[HeaderItem]) -> List[ConnectionHeaderResponse]:
+        return [ConnectionHeaderResponse(key=header.key, configured=bool(header.value)) for header in headers]
 
     @staticmethod
     def _normalize_host(host: str) -> str:
@@ -103,9 +108,6 @@ class ConnectionController:
 
         data.host = self._normalize_host(data.host)
 
-        if not self.check_connection_by_url(data.host, data.headers, min(data.timeout, 10.0)):
-            raise ValueError(f"Unable to connect to the server at '{data.host}'. Check the URL and network permissions.")
-
         now = self._now_iso()
         conn_id = f"conn_{uuid.uuid4().hex[:12]}"
         headers_json = encode_headers(data.headers)
@@ -127,14 +129,14 @@ class ConnectionController:
             db_conn.commit()
 
         logger.info(f"Created new connection '{data.name}' (ID: {conn_id})")
-        models = self._fetch_ollama_models(data.host, data.headers, data.timeout)
+        models = self._fetch_ollama_models(data.host, data.headers, min(data.timeout, 2.0))
 
         return ConnectionResponse(
             id=conn_id,
             name=data.name.strip(),
             type=data.type,
             host=data.host,
-            headers=data.headers,
+            headers=self._public_headers(data.headers),
             timeout=data.timeout,
             created_at=now,
             updated_at=now,
@@ -168,19 +170,27 @@ class ConnectionController:
             new_timeout = data.timeout if data.timeout is not None else row["timeout"]
 
             if data.headers is not None:
-                new_headers = data.headers
-                keys = [header.key.casefold() for header in data.headers]
+                stored_headers, _ = decode_headers(row["headers"])
+                stored_by_key = {header.key.casefold(): header for header in stored_headers}
+                resolved_headers = []
+                for header in data.headers:
+                    value = header.value
+                    if not value and header.configured:
+                        previous = stored_by_key.get(header.key.casefold())
+                        if previous is not None:
+                            value = previous.value
+                    if not value:
+                        raise ValueError(f"A value is required for the '{header.key}' header.")
+                    resolved_headers.append(HeaderItem(key=header.key, value=value))
+                new_headers = resolved_headers
+                keys = [header.key.casefold() for header in new_headers]
                 if len(keys) != len(set(keys)):
                     raise ValueError("Header names must be unique.")
-                new_headers = data.headers
-                headers_json = encode_headers(data.headers)
+                headers_json = encode_headers(new_headers)
             else:
                 headers_raw = row["headers"]
                 new_headers, migrated = decode_headers(headers_raw)
                 headers_json = migrated or headers_raw
-
-            if not self.check_connection_by_url(new_host, new_headers, min(new_timeout, 10.0)):
-                raise ValueError(f"Unable to connect to the server at '{new_host}'. Check the URL and network permissions.")
 
             cursor.execute(
                 """
@@ -195,14 +205,14 @@ class ConnectionController:
             conn_type = row["type"]
 
         logger.info(f"Updated connection '{new_name}' (ID: {conn_id})")
-        models = self._fetch_ollama_models(new_host, new_headers, new_timeout)
+        models = self._fetch_ollama_models(new_host, new_headers, min(new_timeout, 2.0))
 
         return ConnectionResponse(
             id=conn_id,
             name=new_name,
             type=conn_type,
             host=new_host,
-            headers=new_headers,
+            headers=self._public_headers(new_headers),
             timeout=new_timeout,
             created_at=created_at,
             updated_at=now,
@@ -313,7 +323,7 @@ class ConnectionController:
                     name=r["name"],
                     type=r["type"],
                     host=r["host"],
-                    headers=headers,
+                    headers=self._public_headers(headers),
                     timeout=r["timeout"],
                     created_at=r["created_at"],
                     updated_at=r["updated_at"],
