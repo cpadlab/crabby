@@ -71,6 +71,16 @@ def init_db() -> None:
             """
         )
 
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS mcp_tool_cache (
+                server_id TEXT PRIMARY KEY REFERENCES mcp_servers(id) ON DELETE CASCADE,
+                tools TEXT NOT NULL DEFAULT '[]',
+                synced_at TEXT NOT NULL
+            );
+            """
+        )
+
         conn.commit()
 
     if platform.system().lower() == "darwin":
