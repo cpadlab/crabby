@@ -141,6 +141,11 @@ class MCPController:
         except (json.JSONDecodeError, TypeError, ValueError):
             return []
 
+    @staticmethod
+    def _has_cache(cursor: Any, server_id: str) -> bool:
+        cursor.execute("SELECT 1 FROM mcp_tool_cache WHERE server_id = ?", (server_id,))
+        return cursor.fetchone() is not None
+
     @classmethod
     def _store_tools(cls, server_id: str, tools: List[MCPToolDefinition]) -> None:
         serialized = json.dumps([tool.model_dump() for tool in tools], ensure_ascii=False, separators=(",", ":"))
@@ -209,7 +214,7 @@ class MCPController:
         logger.info("Registered MCP server %s.", server_id)
         # Registration remains available while a server is temporarily offline.
         try:
-            tools = self.discover_tools_by_url(url, data.headers, data.timeout, server_id, name, data.type)
+            tools = self.discover_tools_by_url(url, data.headers, min(data.timeout, 5.0), server_id, name, data.type)
             self._store_tools(server_id, tools)
         except Exception as exc:
             logger.info("MCP tool discovery deferred for %s (%s).", server_id, type(exc).__name__)
@@ -334,14 +339,32 @@ class MCPController:
     def get_all_ollama_tools(self) -> List[Dict[str, Any]]:
         with get_connection() as conn:
             rows = conn.execute("SELECT * FROM mcp_servers WHERE enabled = 1").fetchall()
-            results = []
-            for row in rows:
-                for tool in self._read_cache(conn.cursor(), row["id"]):
-                    results.append({"type": "function", "function": {
-                        "name": self._ollama_tool_name(row["id"], tool.name),
-                        "description": tool.description or f"Tool from {row['name']} (original name: {tool.name})",
-                        "parameters": tool.input_schema or tool.parameters or {"type": "object", "properties": {}},
-                    }})
+            cache_cursor = conn.cursor()
+            missing_cache_ids = {row["id"] for row in rows if not self._has_cache(cache_cursor, row["id"])}
+        
+        for row in rows:
+            if row["id"] in missing_cache_ids:
+                try:
+                    headers, migrated = self._headers_from_storage(row["headers"])
+                    if migrated:
+                        with get_connection() as conn:
+                            conn.execute("UPDATE mcp_servers SET headers = ? WHERE id = ?", (migrated, row["id"]))
+                            conn.commit()
+                    tools = self.discover_tools_by_url(
+                        row["url"], headers, min(row["timeout"], 5.0), row["id"], row["name"], row["type"]
+                    )
+                    self._store_tools(row["id"], tools)
+                except Exception as exc:
+                    logger.info("Initial MCP tool discovery deferred for %s (%s).", row["id"], type(exc).__name__)
+
+        results = []
+        for row in rows:
+            for tool in self._read_tools(row["id"]):
+                results.append({"type": "function", "function": {
+                    "name": self._ollama_tool_name(row["id"], tool.name),
+                    "description": tool.description or f"Tool from {row['name']} (original name: {tool.name})",
+                    "parameters": tool.input_schema or tool.parameters or {"type": "object", "properties": {}},
+                }})
         return results
 
     def execute_tool_call(self, tool_name: str, arguments: Dict[str, Any]) -> ToolExecutionResult:
