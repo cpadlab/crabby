@@ -55,6 +55,7 @@ export function useConnections(): UseConnectionsReturn {
     const [search, setSearchState] = React.useState("")
     const [sortBy, setSortByState] = React.useState("created_at")
     const [sortOrder, setSortOrderState] = React.useState<"asc" | "desc">("desc")
+    const requestSequence = React.useRef(0)
 
     const loadConnections = React.useCallback(
         async (overrideParams?: {
@@ -65,6 +66,7 @@ export function useConnections(): UseConnectionsReturn {
             sortOrder?: "asc" | "desc"
             append?: boolean
         }) => {
+            const requestId = ++requestSequence.current
             setLoading(true)
             setError(null)
 
@@ -84,6 +86,8 @@ export function useConnections(): UseConnectionsReturn {
                         currentSortBy,
                         currentSortOrder
                     )
+
+                    if (requestId !== requestSequence.current) return
 
                     if (res.success && res.data) {
                         const data: PaginatedConnectionsResponse = res.data
@@ -115,6 +119,7 @@ export function useConnections(): UseConnectionsReturn {
                     setPages(0)
                 }
             } catch (err) {
+                if (requestId !== requestSequence.current) return
                 const errorMsg = err instanceof Error ? err.message : t("connections.errors.unexpected_error")
                 setError(errorMsg)
                 toast.add({
@@ -123,7 +128,7 @@ export function useConnections(): UseConnectionsReturn {
                     description: errorMsg,
                 })
             } finally {
-                setLoading(false)
+                if (requestId === requestSequence.current) setLoading(false)
             }
         },
         [search, page, size, sortBy, sortOrder, t]
@@ -159,14 +164,21 @@ export function useConnections(): UseConnectionsReturn {
                 return { success: false, error: errorMsg }
             }
 
-            const res = await window.pywebview.api.connections.create(input)
+            let res: PyWebViewResponse<Connection>
+            try {
+                res = await window.pywebview.api.connections.create(input)
+            } catch {
+                const errorMsg = t("connections.errors.unexpected_error")
+                toast.add({ type: "error", title: t("connections.errors.title"), description: errorMsg })
+                return { success: false, error: errorMsg }
+            }
             if (res.success) {
                 toast.add({
                     type: "success",
                     title: t("connections.success.title"),
                     description: t("connections.success.create_success"),
                 })
-                await loadConnections()
+                await loadConnections({ page: 1 })
             } else {
                 const errorMsg = res.error || t("connections.errors.create_failed")
                 toast.add({
@@ -192,7 +204,14 @@ export function useConnections(): UseConnectionsReturn {
                 return { success: false, error: errorMsg }
             }
 
-            const res = await window.pywebview.api.connections.update(id, input)
+            let res: PyWebViewResponse<Connection>
+            try {
+                res = await window.pywebview.api.connections.update(id, input)
+            } catch {
+                const errorMsg = t("connections.errors.unexpected_error")
+                toast.add({ type: "error", title: t("connections.errors.title"), description: errorMsg })
+                return { success: false, error: errorMsg }
+            }
             if (res.success) {
                 toast.add({
                     type: "success",
@@ -225,7 +244,14 @@ export function useConnections(): UseConnectionsReturn {
                 return { success: false, error: errorMsg }
             }
 
-            const res = await window.pywebview.api.connections.delete(id)
+            let res: PyWebViewResponse<boolean>
+            try {
+                res = await window.pywebview.api.connections.delete(id)
+            } catch {
+                const errorMsg = t("connections.errors.unexpected_error")
+                toast.add({ type: "error", title: t("connections.errors.title"), description: errorMsg })
+                return { success: false, error: errorMsg }
+            }
             if (res.success) {
                 toast.add({
                     type: "success",
@@ -262,10 +288,11 @@ export function useConnections(): UseConnectionsReturn {
     )
 
     const getModels = React.useCallback(async (id: string): Promise<string[]> => {
-        if (!window.pywebview?.api?.connections) return []
+        if (!window.pywebview?.api?.connections) throw new Error(t("connections.errors.pywebview_not_available"))
         const res = await window.pywebview.api.connections.get_models(id)
-        return res.success && res.data ? res.data : []
-    }, [])
+        if (!res.success) throw new Error(res.error || t("connections.errors.unexpected_error"))
+        return res.data || []
+    }, [t])
 
     const setSearch = React.useCallback(
         (term: string) => {
@@ -289,7 +316,7 @@ export function useConnections(): UseConnectionsReturn {
             const order = newSortOrder ?? (sortBy === newSortBy && sortOrder === "desc" ? "asc" : "desc")
             setSortByState(newSortBy)
             setSortOrderState(order)
-            loadConnections({ sortBy: newSortBy, sortOrder: order })
+            loadConnections({ page: 1, sortBy: newSortBy, sortOrder: order })
         },
         [sortBy, sortOrder, loadConnections]
     )

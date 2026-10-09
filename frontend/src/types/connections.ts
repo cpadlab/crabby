@@ -1,6 +1,12 @@
 export interface HeaderItem {
     key: string
     value: string
+    configured?: boolean
+}
+
+export interface ConnectionHeader {
+    key: string
+    configured: boolean
 }
 
 export type ConnectionProviderType = "ollama"
@@ -10,7 +16,7 @@ export interface Connection {
     name: string
     type: ConnectionProviderType
     host: string
-    headers: HeaderItem[]
+    headers: ConnectionHeader[]
     timeout: number
     created_at: string
     updated_at: string
