@@ -8,6 +8,7 @@ export interface ConnectionsProviderProps {
 }
 
 export function ConnectionsProvider({ children }: ConnectionsProviderProps) {
+    
     const connectionsState = useConnections()
 
     return (
