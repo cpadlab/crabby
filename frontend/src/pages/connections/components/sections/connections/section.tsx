@@ -13,6 +13,7 @@ import { ConnectionsSkeleton } from "./skeleton"
 import { ConnectionsSummary } from "./summary"
 
 export const ConnectionsSection = () => {
+
     const { connections, hasMore, loadMore, loading, search, setSearch, sortOrder, setSort } = useConnectionsContext()
     const [searchInput, setSearchInput] = React.useState(search)
     const [createOpen, setCreateOpen] = React.useState(false)
@@ -58,8 +59,9 @@ export const ConnectionsSection = () => {
                 </div>
                 
                 <div className="flex items-center gap-2">
+                    
                     <Select value={sortOrder} onValueChange={(value) => { if (value === "asc" || value === "desc") setSort("created_at", value)}}>
-                        <SelectTrigger aria-label={t("connections.toolbar.sort_label")} className="w-auto">
+                        <SelectTrigger aria-label={t("connections.toolbar.sort_label")} className="w-auto sm:flex-auto flex-1">
                             <SelectValue>
                                 {sortOrder === "desc"
                                     ? t("connections.toolbar.newest_first")
@@ -72,7 +74,13 @@ export const ConnectionsSection = () => {
                         </SelectContent>
                     </Select>
 
-                    <ManageConnectionForm open={createOpen} onOpenChange={setCreateOpen} trigger={<Button onClick={() => setCreateOpen(true)}><PlusIcon />{t("connections.create.title")}</Button>} />
+                    <ManageConnectionForm open={createOpen} onOpenChange={setCreateOpen} 
+                        trigger={
+                            <Button className="sm:flex-auto flex-1" onClick={() => setCreateOpen(true)}>
+                                <PlusIcon />
+                                <span>{t("connections.create.title")}</span>
+                            </Button>} 
+                        />
 
                 </div>
 

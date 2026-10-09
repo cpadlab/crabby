@@ -73,8 +73,17 @@
     },
     "connections": {
         "title": "Mis Conexiones",
-        "description": "Aquí se gestionan las conexiones con los modelos y los <1>MCPs</1>.",
+        "description": "Configura tus proveedores de modelos de lenguaje y servidores MCP en un solo lugar.",
+        "eyebrow": "MODELOS Y PROVEEDORES",
+        "breadcrumb_home": "Inicio",
+        "secure_storage": "Credenciales cifradas en el sistema",
+        "toolbar": {
+            "sort_label": "Ordenar por fecha",
+            "newest_first": "Más recientes primero",
+            "oldest_first": "Más antiguas primero"
+        },
         "summary": {
+            "title": "Resumen de conexiones",
             "total_connections": "Total Conexiones",
             "configured": "registradas",
             "total_models": "Modelos Detectados",
@@ -84,13 +93,25 @@
         },
         "section": {
             "title": "Conexiones",
+            "subtitle": "Gestiona tus conexiones con proveedores de LLM y servidores MCP.",
+            "search": "Buscar por nombre o dirección...",
+            "no_search_results": "No hay conexiones que coincidan con «{{search}}».",
             "empty_title": "No hay conexiones configuradas aún",
-            "empty_description": "Añade tu primera conexión para empezar a interactuar con modelos locales.",
+            "empty_description": "Añade un proveedor de modelos o un servidor MCP para empezar.",
             "create_button": "Crear Conexión",
             "load_more": "Cargar más conexiones",
             "loading_more": "Cargando..."
         },
         "card": {
+            "online": "En línea",
+            "offline": "Sin conexión",
+            "checking": "Comprobando",
+            "test": "Probar",
+            "sync": "Modelos",
+            "models": "Modelos",
+            "no_models_short": "Aún no se han sincronizado modelos",
+            "models_synced": "{{count}} modelos disponibles",
+            "more_actions": "Más acciones",
             "timeout": "Timeout: {{timeout}}s",
             "headers_count_one": "{{count}} header configurado",
             "headers_count_other": "{{count}} headers configurados",
@@ -118,8 +139,10 @@
             "timeout_label": "Timeout (segundos)",
             "timeout_placeholder": "30",
             "headers_label": "Cabeceras Personalizadas (Headers)",
+            "headers_description": "Se cifran con el almacén seguro del sistema. Los valores guardados no se muestran al editar.",
             "header_key_placeholder": "Clave (ej. Authorization)",
             "header_value_placeholder": "Valor (ej. Bearer token)",
+            "header_keep_placeholder": "Valor guardado; déjalo vacío para conservarlo",
             "add_header_button": "Añadir Cabecera"
         },
         "create": {
@@ -148,8 +171,11 @@
             "name_required": "El nombre de la conexión es obligatorio.",
             "host_required": "El host o URL es obligatorio.",
             "timeout_min": "El timeout debe ser de al menos 0.5 segundos.",
+            "timeout_max": "El timeout no puede superar los 300 segundos.",
             "header_key_required": "La clave de la cabecera es obligatoria.",
-            "header_value_required": "El valor de la cabecera es obligatorio."
+            "header_value_required": "El valor de la cabecera es obligatorio.",
+            "header_duplicate": "No se pueden repetir nombres de cabecera.",
+            "header_reserved": "Esta cabecera la administra el cliente HTTP."
         },
         "errors": {
             "title": "Error de Conexión",

@@ -73,8 +73,17 @@
     },
     "connections": {
         "title": "My Connections",
-        "description": "Manage model connections and <1>MCPs</1> here.",
+        "description": "Configure your language model providers and MCP servers in one place.",
+        "eyebrow": "MODELS AND PROVIDERS",
+        "breadcrumb_home": "Home",
+        "secure_storage": "Credentials encrypted by your OS",
+        "toolbar": {
+            "sort_label": "Sort by date",
+            "newest_first": "Newest first",
+            "oldest_first": "Oldest first"
+        },
         "summary": {
+            "title": "Connection summary",
             "total_connections": "Total Connections",
             "configured": "registered",
             "total_models": "Detected Models",
@@ -84,13 +93,25 @@
         },
         "section": {
             "title": "Connections",
+            "subtitle": "Manage connections to LLM providers and MCP servers.",
+            "search": "Search by name or address...",
+            "no_search_results": "No connections match “{{search}}”.",
             "empty_title": "No connections configured yet",
-            "empty_description": "Add your first connection to start interacting with local models.",
+            "empty_description": "Add a model provider or MCP server to get started.",
             "create_button": "Create Connection",
             "load_more": "Load more connections",
             "loading_more": "Loading..."
         },
         "card": {
+            "online": "Online",
+            "offline": "Offline",
+            "checking": "Checking",
+            "test": "Test",
+            "sync": "Models",
+            "models": "Models",
+            "no_models_short": "No models synced yet",
+            "models_synced": "{{count}} models available",
+            "more_actions": "More actions",
             "timeout": "Timeout: {{timeout}}s",
             "headers_count_one": "{{count}} header configured",
             "headers_count_other": "{{count}} headers configured",
@@ -118,8 +139,10 @@
             "timeout_label": "Timeout (seconds)",
             "timeout_placeholder": "30",
             "headers_label": "Custom Headers",
+            "headers_description": "Values are encrypted by your OS and hidden while editing existing credentials.",
             "header_key_placeholder": "Key (e.g. Authorization)",
             "header_value_placeholder": "Value (e.g. Bearer token)",
+            "header_keep_placeholder": "Saved value; leave blank to keep it",
             "add_header_button": "Add Header"
         },
         "create": {
@@ -148,8 +171,11 @@
             "name_required": "Connection name is required.",
             "host_required": "Host or URL is required.",
             "timeout_min": "Timeout must be at least 0.5 seconds.",
+            "timeout_max": "Timeout cannot exceed 300 seconds.",
             "header_key_required": "Header key is required.",
-            "header_value_required": "Header value is required."
+            "header_value_required": "Header value is required.",
+            "header_duplicate": "Header names must be unique.",
+            "header_reserved": "This header is managed by the HTTP client."
         },
         "errors": {
             "title": "Connection Error",
