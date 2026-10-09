@@ -273,7 +273,9 @@ export function useMCP(): UseMCPReturn {
         if (!api) throw new Error(t("mcp.errors.pywebview_not_available", "API backend no disponible"))
         const response = await api.discover_tools(id)
         if (!response.success) throw new Error(response.error || mutationError("mcp.errors.discover_failed"))
-        return response.data || []
+        const tools = response.data || []
+        setMcpServers((servers) => servers.map((server) => server.id === id ? { ...server, tools } : server))
+        return tools
     }, [mutationError, t])
 
     const getOllamaTools = React.useCallback(async (): Promise<OllamaTool[]> => {
