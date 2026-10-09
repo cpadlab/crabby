@@ -1,13 +1,15 @@
 import json
 import math
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
+from urllib.parse import urlsplit, urlunsplit
 from typing import Dict, List, Optional
 
-import ollama
-from ollama import Client, ResponseError
+from ollama import Client
 
 from crabby.core.database import get_connection
+from crabby.core.secrets import decode_headers, encode_headers
 from crabby.schemas.connections import (
     ConnectionCreate,
     ConnectionResponse,
@@ -30,10 +32,23 @@ class ConnectionController:
 
     @staticmethod
     def _normalize_host(host: str) -> str:
-        clean = host.strip().rstrip("/")
-        if not clean.startswith(("http://", "https://")):
+        clean = host.strip()
+        if not clean:
+            raise ValueError("Connection host URL cannot be empty.")
+        if "://" not in clean:
             clean = f"http://{clean}"
-        return clean
+        parsed = urlsplit(clean)
+        if parsed.scheme.lower() not in {"http", "https"} or not parsed.hostname:
+            raise ValueError("Connection host must be a valid HTTP or HTTPS URL.")
+        if parsed.username or parsed.password:
+            raise ValueError("Credentials must be configured as headers, not embedded in the URL.")
+        if parsed.query or parsed.fragment:
+            raise ValueError("Connection host cannot contain a query string or fragment.")
+        try:
+            parsed.port
+        except ValueError as exc:
+            raise ValueError("Connection host contains an invalid port.") from exc
+        return urlunsplit((parsed.scheme.lower(), parsed.netloc, parsed.path.rstrip("/"), "", ""))
 
     @classmethod
     def _get_ollama_client(cls, host: str, headers: List[HeaderItem], timeout: float = 5.0) -> Client:
@@ -58,8 +73,8 @@ class ConnectionController:
                     model_names.append(name)
 
             return model_names
-        except Exception as exc:
-            logger.warning(f"Could not fetch models from Ollama host '{host}': {exc}")
+        except Exception:
+            logger.warning("Could not fetch models from configured Ollama host.")
             return []
 
     @classmethod
@@ -68,11 +83,11 @@ class ConnectionController:
         Tests if an Ollama server is online and reachable using official Ollama SDK.
         """
         try:
-            client = cls._get_ollama_client(host, headers, timeout=timeout)
+            client = cls._get_ollama_client(host, headers, timeout=min(max(timeout, 0.5), 10.0))
             client.list()
             return True
-        except (ResponseError, Exception) as exc:
-            logger.debug(f"Health check failed for Ollama host '{host}': {exc}")
+        except Exception:
+            logger.debug("Ollama health check failed for configured host.")
             return False
 
     def create(self, data: ConnectionCreate) -> ConnectionResponse:
@@ -83,17 +98,17 @@ class ConnectionController:
             raise ValueError("Connection name cannot be empty.")
         if not data.host or not data.host.strip():
             raise ValueError("Connection host URL cannot be empty.")
-        if data.timeout <= 0:
-            raise ValueError("Connection timeout must be a positive number.")
+        if not 0.5 <= data.timeout <= 300:
+            raise ValueError("Connection timeout must be between 0.5 and 300 seconds.")
 
         data.host = self._normalize_host(data.host)
 
-        if not self.check_connection_by_url(data.host, data.headers, data.timeout):
+        if not self.check_connection_by_url(data.host, data.headers, min(data.timeout, 10.0)):
             raise ValueError(f"Unable to connect to the server at '{data.host}'. Check the URL and network permissions.")
 
         now = self._now_iso()
         conn_id = f"conn_{uuid.uuid4().hex[:12]}"
-        headers_json = json.dumps([h.model_dump() for h in data.headers])
+        headers_json = encode_headers(data.headers)
 
         with get_connection() as db_conn:
             cursor = db_conn.cursor()
@@ -148,15 +163,24 @@ class ConnectionController:
                     raise ValueError(f"A connection with the name '{new_name}' already exists.")
 
             new_host = self._normalize_host(data.host) if data.host and data.host.strip() else row["host"]
-            new_timeout = data.timeout if data.timeout is not None and data.timeout > 0 else row["timeout"]
+            if data.timeout is not None and not 0.5 <= data.timeout <= 300:
+                raise ValueError("Connection timeout must be between 0.5 and 300 seconds.")
+            new_timeout = data.timeout if data.timeout is not None else row["timeout"]
 
             if data.headers is not None:
                 new_headers = data.headers
-                headers_json = json.dumps([h.model_dump() for h in data.headers])
+                keys = [header.key.casefold() for header in data.headers]
+                if len(keys) != len(set(keys)):
+                    raise ValueError("Header names must be unique.")
+                new_headers = data.headers
+                headers_json = encode_headers(data.headers)
             else:
                 headers_raw = row["headers"]
-                new_headers = [HeaderItem(**item) for item in json.loads(headers_raw)]
-                headers_json = headers_raw
+                new_headers, migrated = decode_headers(headers_raw)
+                headers_json = migrated or headers_raw
+
+            if not self.check_connection_by_url(new_host, new_headers, min(new_timeout, 10.0)):
+                raise ValueError(f"Unable to connect to the server at '{new_host}'. Check the URL and network permissions.")
 
             cursor.execute(
                 """
@@ -209,7 +233,9 @@ class ConnectionController:
             if not row:
                 return False
 
-            headers = [HeaderItem(**h) for h in json.loads(row["headers"])]
+            headers, migrated = decode_headers(row["headers"])
+            if migrated:
+                db_conn.execute("UPDATE connections SET headers = ? WHERE id = ?", (migrated, conn_id))
             return self.check_connection_by_url(row["host"], headers, row["timeout"])
 
     def get_models(self, conn_id: str) -> List[str]:
@@ -223,7 +249,9 @@ class ConnectionController:
             if not row:
                 return []
 
-            headers = [HeaderItem(**h) for h in json.loads(row["headers"])]
+            headers, migrated = decode_headers(row["headers"])
+            if migrated:
+                db_conn.execute("UPDATE connections SET headers = ? WHERE id = ?", (migrated, conn_id))
             return self._fetch_ollama_models(row["host"], headers, row["timeout"])
 
     def list_paginated(
@@ -269,9 +297,16 @@ class ConnectionController:
             rows = cursor.fetchall()
 
         items = []
-        for r in rows:
-            headers = [HeaderItem(**h) for h in json.loads(r["headers"])]
-            models = self._fetch_ollama_models(r["host"], headers, timeout=2.0)
+        with ThreadPoolExecutor(max_workers=min(4, max(1, len(rows)))) as pool:
+            decoded = list(pool.map(lambda r: decode_headers(r["headers"]), rows))
+            models_by_index = list(pool.map(
+                lambda pair: self._fetch_ollama_models(pair[0]["host"], pair[1][0], timeout=min(2.0, pair[0]["timeout"])),
+                zip(rows, decoded),
+            ))
+        for r, (headers, migrated), models in zip(rows, decoded, models_by_index):
+            if migrated:
+                with get_connection() as db_conn:
+                    db_conn.execute("UPDATE connections SET headers = ? WHERE id = ?", (migrated, r["id"]))
             items.append(
                 ConnectionResponse(
                     id=r["id"],
