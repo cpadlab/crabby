@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     WINDOW_DEV_URL: str = "http://localhost:5173"
     WINDOW_WIDTH: int = 1200
     WINDOW_HEIGHT: int = 800
-    WINDOW_MIN_WIDTH: int = 900
+    WINDOW_MIN_WIDTH: int = 400
     WINDOW_MIN_HEIGHT: int = 600
     DEBUG: bool = True
 
